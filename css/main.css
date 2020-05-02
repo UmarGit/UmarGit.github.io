@@ -1087,7 +1087,7 @@ header {
 	position: fixed;
 	width: 100%;
 	min-height: 66px;
-	z-index: 600;
+	z-index: 1;
 }
 header .row {
 	position: relative;
@@ -1096,6 +1096,8 @@ header .row {
 header .top-bar {
 	display: block;
 	background: #000000;
+	opacity: 80%;
+	border-radius: 0px 0px 40px 10px;
 	min-width: 220px;
 	min-height: 66px;
 	position: absolute;
@@ -1231,7 +1233,8 @@ header .logo a {
 .main-navigation {
 	background: #000000;
 	padding: 24px 30px 42px;
-	margin: 0;
+	border-radius: 10px 40px 10px 40px;
+	margin: 2px;
 	width: 100%;
 	height: auto;
 	clear: both;
@@ -1838,6 +1841,7 @@ header .logo a {
 	transition: all 0.5s ease-in-out;
 	position: relative;
 	left: -100%;
+	margin: 10px;
 }
 
 #portfolio .folio-title {
