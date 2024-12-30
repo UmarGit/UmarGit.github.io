@@ -17,6 +17,19 @@ body {
   width: 0;
 }
 
+.highlight {
+  @apply relative px-1 cursor-pointer;
+}
+
+.highlight::before {
+  content: "";
+  @apply absolute inset-0 bg-current opacity-10 rounded z-[-1] transition-opacity duration-300 ease-in-out;
+}
+
+.highlight:hover::before {
+  @apply opacity-20;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
