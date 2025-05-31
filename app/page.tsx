@@ -1,9 +1,9 @@
-import { Suspense } from "react";
-import { getAllPosts } from "@/lib/mdx";
-import BlogList from "@/components/blog-list";
+import { Suspense } from "react"
+import { getAllPosts } from "@/lib/mdx"
+import BlogList from "@/components/blog-list"
 
 export default async function Home() {
-  const posts = await getAllPosts();
+  const posts = await getAllPosts()
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -13,8 +13,7 @@ export default async function Home() {
           Hi, I'm Umar Ahmed
         </h1>
         <p className="text-lg text-gray-600 leading-relaxed font-light">
-          I write about software engineering, machine learning, data science,
-          and quantum computing.
+          I write about software engineering, machine learning, data science, and quantum computing.
         </p>
       </header>
 
@@ -56,12 +55,10 @@ export default async function Home() {
           </div>
 
           <div className="text-right">
-            <p className="text-gray-400 text-sm font-light">
-              © {new Date().getFullYear()}
-            </p>
+            <p className="text-gray-400 text-sm font-light">© {new Date().getFullYear()}</p>
           </div>
         </div>
       </footer>
     </div>
-  );
+  )
 }

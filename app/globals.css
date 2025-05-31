@@ -13,6 +13,10 @@ body {
   background-color: white;
 }
 
+::-webkit-scrollbar {
+  width: 0;
+}
+
 /* Custom prose styles for blog content */
 .prose {
   @apply text-gray-700 leading-relaxed;

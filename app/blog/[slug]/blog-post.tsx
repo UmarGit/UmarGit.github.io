@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowLeft, Copy, Check } from "lucide-react";
@@ -11,14 +13,20 @@ import rehypeRaw from "rehype-raw";
 import "highlight.js/styles/github.css";
 import type { Components } from "react-markdown";
 import ReadingProgress from "@/components/reading-progress";
-import type { BlogPost } from "@/lib/mdx";
+import ImageLightbox from "@/components/image-lightbox";
+import type { BlogPost as BlogPostType } from "@/lib/mdx";
 
 interface BlogPostProps {
-  post: BlogPost;
+  post: BlogPostType;
 }
 
 export default function BlogPost({ post }: BlogPostProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<{
+    src: string;
+    alt: string;
+    originRect: DOMRect | null;
+  } | null>(null);
 
   const handleCopyCode = async (code: string) => {
     try {
@@ -30,18 +38,44 @@ export default function BlogPost({ post }: BlogPostProps) {
     }
   };
 
+  const handleImageClick = (
+    src: string,
+    alt: string,
+    event: React.MouseEvent<HTMLImageElement>
+  ) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    setLightboxImage({ src, alt, originRect: rect });
+  };
+
   const components: Components = {
+    img({ src, alt, ...props }: any) {
+      if (!src) return null;
+
+      return (
+        <>
+          <img
+            src={src}
+            alt={alt || ""}
+            className="w-full hover:shadow-sm transition-all duration-200 cursor-zoom-in"
+            onClick={(e) => handleImageClick(src, alt || "", e)}
+            {...props}
+          />
+          {alt && (
+            <span className="block text-center text-sm text-gray-500 mt-2 italic">
+              {alt}
+            </span>
+          )}
+        </>
+      );
+    },
     code({ node, className, children, ...props }: any) {
       const match = /language-(\w+)/.exec(className || "");
 
-      // Improved code string extraction
       const getCodeString = (node: any, children: any) => {
-        // Direct string in node value
         if (node?.children?.[0]?.value) {
           return node.children[0].value;
         }
 
-        // Handle children array with potential nested objects
         if (Array.isArray(children)) {
           return children
             .map((child) =>
@@ -50,14 +84,12 @@ export default function BlogPost({ post }: BlogPostProps) {
             .join("");
         }
 
-        // Single child
         if (children?.props?.children) {
           return Array.isArray(children.props.children)
             ? children.props.children.join("")
             : children.props.children;
         }
 
-        // Fallback
         return String(children || "");
       };
 
@@ -65,43 +97,59 @@ export default function BlogPost({ post }: BlogPostProps) {
 
       if (match) {
         return (
-          <div className="relative group my-8">
-            <div className="bg-gray-50 bg-opacity-50 border border-gray-100 rounded-lg">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100">
+          <div className="relative group my-6">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg">
+              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
                 <span className="text-xs text-gray-500 font-mono">
                   {match[1]}
                 </span>
-              </div>
-              <div className="relative">
-                <pre className="!m-0 !bg-transparent">
-                  <code
-                    className={`language-${match[1]} !bg-transparent`}
-                    {...props}
-                  >
-                    {children}
-                  </code>
-                </pre>
                 <button
                   onClick={() => handleCopyCode(codeString)}
-                  className="absolute top-3 right-3 p-2 bg-white hover:bg-gray-50 border border-gray-200 rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 shadow-sm"
+                  className="p-1 bg-white hover:bg-gray-50 border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-all duration-200"
                   title="Copy code"
                 >
                   {copiedIndex ? (
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="w-3 h-3 text-green-600" />
                   ) : (
-                    <Copy className="w-4 h-4 text-gray-600" />
+                    <Copy className="w-3 h-3 text-gray-600" />
                   )}
                 </button>
               </div>
+              <pre className="!m-0 !bg-transparent p-4 overflow-x-auto">
+                <code
+                  className={`language-${match[1]} !bg-transparent text-sm`}
+                  {...props}
+                >
+                  {children}
+                </code>
+              </pre>
             </div>
           </div>
         );
       }
-      // Inline code
+
       return (
         <code className="bg-gray-100 text-gray-900 px-1 py-0.5 rounded font-mono text-sm">
           {children}
         </code>
+      );
+    },
+    p({ children, ...props }) {
+      // Check if the paragraph contains only an image
+      const hasOnlyImage =
+        React.Children.count(children) === 1 &&
+        React.isValidElement(children) &&
+        children.type === "img";
+
+      if (hasOnlyImage) {
+        // Wrap the image in a div outside of the paragraph
+        return <div className="my-6 cursor-pointer group">{children}</div>;
+      }
+
+      return (
+        <p className="mb-5 leading-relaxed font-light" {...props}>
+          {children}
+        </p>
       );
     },
   };
@@ -146,13 +194,13 @@ export default function BlogPost({ post }: BlogPostProps) {
               <span className="font-light">{post.readTime}</span>
             </div>
 
-            <div className="flex flex-wrap gap-1 mb-6">
-              {post.tags.map((tag: string, index: number) => (
-                <span key={tag} className="text-sm text-gray-500 font-light">
-                  <span className="border border-neutral-100 bg-neutral-50 px-1 py-[1px] rounded-sm">
-                    {tag}
-                  </span>
-                  {index < post.tags.length - 1 && ", "}
+            <div className="flex flex-wrap gap-2 mb-6">
+              {post.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-sm text-gray-500 font-light border border-gray-200 bg-gray-50 px-2 py-1 rounded"
+                >
+                  {tag}
                 </span>
               ))}
             </div>
@@ -173,7 +221,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="prose prose-lg max-w-none prose-pre:!p-0 prose-pre:!m-0 prose-pre:!bg-transparent"
+          className="prose prose-lg max-w-none"
         >
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}
@@ -193,17 +241,9 @@ export default function BlogPost({ post }: BlogPostProps) {
             className="mt-16 pt-8 border-t border-gray-100"
           >
             <div className="flex items-center space-x-4">
-              {post.author.avatar ? (
-                <img
-                  src={post.author.avatar}
-                  alt={post.author.name}
-                  className="w-12 h-12 rounded-full"
-                />
-              ) : (
-                <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium text-sm">
-                  {post.author.name.charAt(0)}
-                </div>
-              )}
+              <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium text-sm">
+                {post.author.name.charAt(0)}
+              </div>
               <div>
                 <h3 className="font-light text-gray-900">{post.author.name}</h3>
                 {post.author.title && (
@@ -216,6 +256,15 @@ export default function BlogPost({ post }: BlogPostProps) {
           </motion.div>
         )}
       </article>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        src={lightboxImage?.src || "/placeholder.svg"}
+        alt={lightboxImage?.alt || ""}
+        isOpen={!!lightboxImage}
+        onClose={() => setLightboxImage(null)}
+        originRect={lightboxImage?.originRect || null}
+      />
     </div>
   );
 }

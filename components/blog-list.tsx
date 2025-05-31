@@ -1,24 +1,20 @@
-"use client";
+"use client"
 
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowUpRight, Dot } from "lucide-react";
-import { useState } from "react";
-import type { BlogPost } from "@/lib/mdx";
+import { motion } from "framer-motion"
+import Link from "next/link"
+import { ArrowUpRight, Dot } from "lucide-react"
+import { useState } from "react"
+import type { BlogPost } from "@/lib/mdx"
 
 interface BlogListProps {
-  posts: BlogPost[];
+  posts: BlogPost[]
 }
 
 export default function BlogList({ posts }: BlogListProps) {
-  const [hoveredPost, setHoveredPost] = useState<string | null>(null);
+  const [hoveredPost, setHoveredPost] = useState<string | null>(null)
 
   if (posts.length === 0) {
-    return (
-      <p className="text-gray-600 text-center py-12 font-light">
-        No posts found.
-      </p>
-    );
+    return <p className="text-gray-600 text-center py-12 font-light">No posts found.</p>
   }
 
   return (
@@ -53,26 +49,18 @@ export default function BlogList({ posts }: BlogListProps) {
                     {post.title}
                   </h2>
 
-                  <p className="text-gray-600 leading-relaxed font-light text-sm mb-3">
-                    {post.description}
-                  </p>
+                  <p className="text-gray-600 leading-relaxed font-light text-sm mb-3">{post.description}</p>
 
                   <div className="flex flex-wrap gap-1">
                     {post.tags.slice(0, 3).map((tag) => (
                       <span
                         key={tag}
-                        className="text-xs text-gray-500 font-light"
+                        className="text-xs text-gray-500 font-light border border-gray-200 bg-gray-50 px-2 py-1 rounded"
                       >
                         {tag}
-                        {post.tags.indexOf(tag) <
-                          Math.min(post.tags.length - 1, 2) && ", "}
                       </span>
                     ))}
-                    {post.tags.length > 3 && (
-                      <span className="text-xs text-gray-400">
-                        +{post.tags.length - 3}
-                      </span>
-                    )}
+                    {post.tags.length > 3 && <span className="text-xs text-gray-400">+{post.tags.length - 3}</span>}
                   </div>
                 </div>
                 <motion.div
@@ -90,5 +78,5 @@ export default function BlogList({ posts }: BlogListProps) {
         </motion.article>
       ))}
     </div>
-  );
+  )
 }
