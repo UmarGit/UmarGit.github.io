@@ -2,32 +2,174 @@
 @tailwind components;
 @tailwind utilities;
 
+@import "highlight.js/styles/github.css";
+
 body {
-  font-family: "Inter", serif;
+  font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
-  text-transform: lowercase !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  background-color: white;
 }
 
-.header-text {
-  writing-mode: vertical-lr;
-  transform: rotate(180deg);
+/* Custom prose styles for blog content */
+.prose {
+  @apply text-gray-700 leading-relaxed;
 }
 
-.hide-scrollbar::-webkit-scrollbar {
-  width: 0;
+.prose h1 {
+  @apply text-2xl font-medium text-gray-900 mb-6 mt-10 leading-tight tracking-tight;
 }
 
-.highlight {
-  @apply relative px-1 cursor-pointer;
+.prose h2 {
+  @apply text-xl font-medium text-gray-900 mb-4 mt-8 leading-tight tracking-tight;
 }
 
-.highlight::before {
-  content: "";
-  @apply absolute inset-0 bg-current opacity-10 rounded z-[-1] transition-opacity duration-300 ease-in-out;
+.prose h3 {
+  @apply text-lg font-medium text-gray-900 mb-3 mt-6 tracking-tight;
 }
 
-.highlight:hover::before {
-  @apply opacity-20;
+.prose p {
+  @apply mb-5 leading-relaxed font-light;
+}
+
+/* .prose code {
+  @apply bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono;
+} */
+
+/* .prose pre {
+  @apply my-6 bg-gray-50 rounded-lg border border-gray-200 overflow-x-auto;
+} */
+
+.prose pre code {
+  @apply block bg-transparent p-4 text-sm leading-relaxed;
+}
+
+.prose ul {
+  @apply mb-5 space-y-2 pl-6 list-disc;
+}
+
+.prose li {
+  @apply leading-relaxed font-light;
+}
+
+.prose blockquote {
+  @apply border-l-2 border-gray-300 pl-4 italic text-gray-600 my-6 bg-gray-50/50 py-3 rounded-r font-light;
+}
+
+.prose strong {
+  @apply text-gray-900 font-medium;
+}
+
+.prose a {
+  @apply text-gray-900 hover:text-gray-700 transition-colors underline decoration-gray-300 hover:decoration-gray-500;
+}
+
+.prose hr {
+  @apply my-8 border-gray-200;
+}
+
+/* Code block styles */
+.hljs {
+  @apply bg-transparent;
+  color: #24292e;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6a737d;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag {
+  color: #d73a49;
+}
+
+.hljs-string,
+.hljs-doctag,
+.hljs-template-variable {
+  color: #032f62;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+  color: #6f42c1;
+}
+
+.hljs-variable,
+.hljs-template-variable {
+  color: #005cc5;
+}
+
+.hljs-type,
+.hljs-class {
+  color: #6f42c1;
+}
+
+.hljs-number,
+.hljs-literal {
+  color: #005cc5;
+}
+
+.hljs-tag,
+.hljs-name,
+.hljs-attribute {
+  color: #22863a;
+}
+
+.hljs-regexp,
+.hljs-link {
+  color: #032f62;
+}
+
+.hljs-symbol,
+.hljs-bullet {
+  color: #005cc5;
+}
+
+.hljs-built_in,
+.hljs-builtin-name {
+  color: #005cc5;
+}
+
+.hljs-meta {
+  color: #6a737d;
+}
+
+.hljs-deletion {
+  background: #ffeef0;
+}
+
+.hljs-addition {
+  background: #f0fff4;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+}
+
+/* Selection styling */
+::selection {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid #374151;
+  outline-offset: 2px;
 }
 
 @layer base {
@@ -58,32 +200,6 @@ body {
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-  }
 }
 
 @layer base {
@@ -91,6 +207,6 @@ body {
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-gray-900;
   }
 }
