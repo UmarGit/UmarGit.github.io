@@ -2,6 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@/components/analytics";
 
 const interSans = Inter({
   variable: "--font-inter-sans",
@@ -15,13 +16,14 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body className={`${interSans.variable} antialiased bg-white`}>
+    <html lang="en" className={interSans.variable}>
+      <body>
         {children}
+        <Analytics />
       </body>
     </html>
   );

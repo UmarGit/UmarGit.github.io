@@ -44,6 +44,7 @@
     "cmdk": "latest",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "latest",
+    "firebase": "^11.8.1",
     "framer-motion": "latest",
     "fs": "latest",
     "gray-matter": "latest",
