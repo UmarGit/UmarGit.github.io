@@ -2,14 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "highlight.js/styles/github.css";
-
 body {
   font-family: "Inter", sans-serif;
   font-optical-sizing: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   background-color: white;
 }
 
@@ -161,8 +158,8 @@ body {
 
 /* Selection styling */
 ::selection {
-  background-color: #f3f4f6;
-  color: #111827;
+  background-color: #000000;
+  color: #ffffff;
 }
 
 /* Smooth scrolling */

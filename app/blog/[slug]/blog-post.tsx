@@ -56,7 +56,7 @@ export default function BlogPost({ post }: BlogPostProps) {
           <img
             src={src}
             alt={alt || ""}
-            className="w-full hover:shadow-sm transition-all duration-200 cursor-zoom-in"
+            className="w-full hover:scale-105  transition-all duration-200 cursor-zoom-in"
             onClick={(e) => handleImageClick(src, alt || "", e)}
             {...props}
           />
@@ -115,7 +115,7 @@ export default function BlogPost({ post }: BlogPostProps) {
                   )}
                 </button>
               </div>
-              <pre className="!m-0 !bg-transparent p-4 overflow-x-auto">
+              <pre className="!m-0 !bg-transparent overflow-x-auto">
                 <code
                   className={`language-${match[1]} !bg-transparent text-sm`}
                   {...props}
