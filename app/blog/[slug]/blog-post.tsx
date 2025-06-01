@@ -4,7 +4,7 @@ import React from "react";
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { ArrowLeft, Copy, Check } from "lucide-react";
+import { ArrowLeft, Copy, Check, Share, LinkIcon, Share2 } from "lucide-react";
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
@@ -15,6 +15,7 @@ import type { Components } from "react-markdown";
 import ReadingProgress from "@/components/reading-progress";
 import ImageLightbox from "@/components/image-lightbox";
 import type { BlogPost as BlogPostType } from "@/lib/mdx";
+import ShareButton from "@/components/share-button";
 
 interface BlogPostProps {
   post: BlogPostType;
@@ -158,20 +159,24 @@ export default function BlogPost({ post }: BlogPostProps) {
     <div className="min-h-screen bg-white text-gray-900">
       <ReadingProgress />
 
-      {/* Back button */}
+      {/* Navigation and Share */}
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
         className="max-w-2xl mx-auto px-6 pt-8"
       >
-        <Link
-          href="/"
-          className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors text-sm font-light"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors text-sm font-light"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back
+          </Link>
+
+          <ShareButton variant="minimal" title={post.title} />
+        </div>
       </motion.div>
 
       {/* Article */}
@@ -230,6 +235,21 @@ export default function BlogPost({ post }: BlogPostProps) {
           >
             {post.content}
           </ReactMarkdown>
+        </motion.div>
+
+        {/* Share section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="mt-12 pt-6 border-t border-gray-100"
+        >
+          <div className="text-left">
+            <p className="text-gray-600 mb-3 font-light">
+              Found this article helpful?
+            </p>
+            <ShareButton title={post.title} />
+          </div>
         </motion.div>
 
         {/* Author section */}

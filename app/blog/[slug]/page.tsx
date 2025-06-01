@@ -1,11 +1,18 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getPostBySlug } from "@/lib/mdx";
+import { getPostBySlug, getAllPosts } from "@/lib/mdx";
 import BlogPost from "./blog-post";
 import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateStaticParams() {
+  const posts = await getAllPosts();
+  return posts.map((post) => ({
+    slug: post.slug,
+  }));
 }
 
 export async function generateMetadata({
