@@ -1,0 +1,110 @@
+---
+title: "How Quantum RNNs Work (Step-by-Step)"
+description: "Quantum Recurrent Neural Networks (QRNNs) combine ideas from classical RNNs with the expressive power of quantum circuits. Let’s walk through the concept step by step."
+date: "2025-09-29"
+tags: ["quantum computing", "qiskit", "machine learning", "QRNN"]
+author:
+  name: "Umar Ahmed"
+  title: "Senior Software Engineer & ML Researcher"
+---
+
+We’ll **visualize every step** of how a Quantum Recurrent Neural Network works with simple Python code.
+
+---
+
+## 📌 What is a Quantum RNN?
+
+A QRNN is similar to a classical RNN: it **processes sequences step by step**, keeping a hidden state.
+But here, the hidden state is a **quantum system** represented by qubits.
+
+---
+
+## 📊 Step 1: Define the Problem
+
+We’ll use a toy example — predicting the next character in `"hello"`.
+
+```python
+text = "hello"
+chars = sorted(list(set(text)))
+char_to_int = {ch: i for i, ch in enumerate(chars)}
+int_to_char = {i: ch for i, ch in enumerate(chars)}
+
+print(char_to_int)  # {'e': 0, 'h': 1, 'l': 2, 'o': 3}
+```
+
+---
+
+## 🧠 Step 2: Encoding Data into Qubits
+
+We need to represent characters as quantum states.
+For simplicity, we’ll use **basis encoding**: each character maps to a computational basis state.
+
+* `'e'` → |00⟩
+* `'h'` → |01⟩
+* `'l'` → |10⟩
+* `'o'` → |11⟩
+
+---
+
+## 🔁 Step 3: Quantum RNN Cell (Concept)
+
+In a QRNN, the hidden state is a set of qubits. Each step:
+
+- Encode input into qubits.
+- Apply parameterized gates (like Rx, Ry, Rz).
+- Entangle input and hidden state.
+- Measure to get predictions.
+
+```python
+from qiskit import QuantumCircuit
+
+def qrnn_cell(params, input_qubit, hidden_qubit):
+    qc = QuantumCircuit(2)
+    qc.ry(params[0], input_qubit)
+    qc.ry(params[1], hidden_qubit)
+    qc.cx(input_qubit, hidden_qubit)
+    return qc
+```
+
+---
+
+## 📉 Step 4: Training (High-Level)
+
+Like classical RNNs, QRNNs are trained by:
+
+* Defining a loss (e.g., cross-entropy).
+* Running the quantum circuit.
+* Using classical optimizers (like gradient descent) to update gate parameters.
+
+Training is slower (many circuit runs), but the **Hilbert space grows exponentially** with hidden qubits.
+
+---
+
+## 🧩 Step 5: Prediction
+
+After training, we feed `"h"` and predict the next characters.
+The output probabilities come from **measurement statistics** of the qubits.
+
+---
+
+## 📈 Step 6: Why QRNNs?
+
+* **Exponential state space:** n qubits → 2^n states.
+* **Potentially more expressive** with fewer parameters.
+* **Hybrid training possible:** classical optimizer + quantum forward pass.
+
+---
+
+## ✅ Conclusion
+
+QRNNs are an exciting frontier:
+
+* They extend RNN concepts into the quantum domain.
+* Encoding and training are the main challenges.
+* With enough qubits, they might model sequences more efficiently than classical RNNs.
+
+This workflow mirrors classical ML: define model → encode data → train → predict → evaluate.
+
+Quantum makes the **hidden state exponentially richer**.
+
+---
