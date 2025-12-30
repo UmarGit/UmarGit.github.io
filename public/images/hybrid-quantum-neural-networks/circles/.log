@@ -1,0 +1,82 @@
+Epoch 5/200 | Loss: 0.6965
+Epoch 10/200 | Loss: 0.6935
+Epoch 15/200 | Loss: 0.6907
+Epoch 20/200 | Loss: 0.6860
+Epoch 25/200 | Loss: 0.6802
+Epoch 30/200 | Loss: 0.6742
+Epoch 35/200 | Loss: 0.6694
+Epoch 40/200 | Loss: 0.6661
+Epoch 45/200 | Loss: 0.6634
+Epoch 50/200 | Loss: 0.6617
+Epoch 55/200 | Loss: 0.6597
+Epoch 60/200 | Loss: 0.6578
+Epoch 65/200 | Loss: 0.6558
+Epoch 70/200 | Loss: 0.6533
+Epoch 75/200 | Loss: 0.6506
+Epoch 80/200 | Loss: 0.6484
+Epoch 85/200 | Loss: 0.6457
+Epoch 90/200 | Loss: 0.6430
+Epoch 95/200 | Loss: 0.6404
+Epoch 100/200 | Loss: 0.6383
+Epoch 105/200 | Loss: 0.6364
+Epoch 110/200 | Loss: 0.6351
+Epoch 115/200 | Loss: 0.6341
+Epoch 120/200 | Loss: 0.6332
+Epoch 125/200 | Loss: 0.6322
+Epoch 130/200 | Loss: 0.6310
+Epoch 135/200 | Loss: 0.6297
+Epoch 140/200 | Loss: 0.6286
+Epoch 145/200 | Loss: 0.6277
+Epoch 150/200 | Loss: 0.6269
+Epoch 155/200 | Loss: 0.6262
+Epoch 160/200 | Loss: 0.6255
+Epoch 165/200 | Loss: 0.6245
+Epoch 170/200 | Loss: 0.6240
+Epoch 175/200 | Loss: 0.6235
+Epoch 180/200 | Loss: 0.6234
+Epoch 185/200 | Loss: 0.6230
+Epoch 190/200 | Loss: 0.6230
+Epoch 195/200 | Loss: 0.6225
+Epoch 200/200 | Loss: 0.6221
+torch.Size([240])
+------------------------------
+       Classical MODEL RESULTS       
+------------------------------
+Accuracy:           61.67%
+Training Time:      9.53478 sec
+Inference Time:      0.00511 sec
+------------------------------
+
+Training for 50 epochs...
+Epoch 2/50 | Loss: 0.7201
+Epoch 4/50 | Loss: 0.6902
+Epoch 6/50 | Loss: 0.6877
+Epoch 8/50 | Loss: 0.6732
+Epoch 10/50 | Loss: 0.6693
+Epoch 12/50 | Loss: 0.6592
+Epoch 14/50 | Loss: 0.6525
+Epoch 16/50 | Loss: 0.6365
+Epoch 18/50 | Loss: 0.6252
+Epoch 20/50 | Loss: 0.6183
+Epoch 22/50 | Loss: 0.6080
+Epoch 24/50 | Loss: 0.6003
+Epoch 26/50 | Loss: 0.5994
+Epoch 28/50 | Loss: 0.5891
+Epoch 30/50 | Loss: 0.5818
+Epoch 32/50 | Loss: 0.5783
+Epoch 34/50 | Loss: 0.5711
+Epoch 36/50 | Loss: 0.5684
+Epoch 38/50 | Loss: 0.5671
+Epoch 40/50 | Loss: 0.5633
+Epoch 42/50 | Loss: 0.5592
+Epoch 44/50 | Loss: 0.5646
+Epoch 46/50 | Loss: 0.5618
+Epoch 48/50 | Loss: 0.5589
+Epoch 50/50 | Loss: 0.5612
+------------------------------
+       Quantum Simulator MODEL RESULTS       
+------------------------------
+Accuracy:           67.92%
+Training Time:      811.67526 sec
+Inference Time:     0.32174 sec
+------------------------------
