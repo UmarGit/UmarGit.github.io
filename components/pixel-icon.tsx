@@ -17,7 +17,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       ".x.....x.",
       "..xxxxx..",
     ],
-    colors: { a: "#7c6cff" },
+    colors: { a: "#8e84c8" },
   },
   pizza: {
     rows: [
@@ -31,7 +31,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       "....y....",
       ".........",
     ],
-    colors: { c: "#c98d4f", y: "#ffcf5a", r: "#e8505b" },
+    colors: { c: "#b98a5a", y: "#e9c46a", r: "#c8605f" },
   },
   web: {
     rows: [
@@ -45,7 +45,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       "x.......x",
       "xxxxxxxxx",
     ],
-    colors: { r: "#ff6f6f", y: "#ffcf5a", g: "#57c27a", a: "#6b8cff" },
+    colors: { r: "#d9776f", y: "#e2c26a", g: "#7baf8a", a: "#8e84c8" },
   },
   chip: {
     rows: [
@@ -59,7 +59,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       ".xxxxxxx.",
       "..x.x.x..",
     ],
-    colors: { a: "#9aa3b5", g: "#57c27a" },
+    colors: { a: "#a7a2b3", g: "#7baf8a" },
   },
   chart: {
     rows: [
@@ -73,7 +73,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       "xd.......",
       "xxxxxxxxx",
     ],
-    colors: { a: "#6b8cff", d: "#e8505b" },
+    colors: { a: "#8e84c8", d: "#c8605f" },
   },
   notebook: {
     rows: [
@@ -87,7 +87,7 @@ const ICONS: Record<string, { rows: string[]; colors: Record<string, string> }> 
       "xx.....x.",
       ".xxxxxxx.",
     ],
-    colors: { a: "#6b8cff" },
+    colors: { a: "#8e84c8" },
   },
 };
 

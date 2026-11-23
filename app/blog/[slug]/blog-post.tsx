@@ -1,157 +1,101 @@
 "use client";
 
-import React from "react";
-
-import { motion } from "framer-motion";
-import Link from "next/link";
-import { ArrowLeft, Copy, Check, Share, LinkIcon, Share2 } from "lucide-react";
-import { useState } from "react";
+import React, { useMemo, useState } from "react";
+import { Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
-import "highlight.js/styles/github.css";
 import type { Components } from "react-markdown";
 import ReadingProgress from "@/components/reading-progress";
 import ImageLightbox from "@/components/image-lightbox";
 import type { BlogPost as BlogPostType } from "@/lib/mdx";
 import ShareButton from "@/components/share-button";
 import PixelIcon from "@/components/pixel-icon";
+import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
+import Toc from "@/components/toc";
+import { extractHeadings, slugify } from "@/lib/headings";
 
-interface BlogPostProps {
-  post: BlogPostType;
+/** Plain text of a React subtree (for heading ids). */
+function textOf(node: React.ReactNode): string {
+  if (node == null || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(textOf).join("");
+  if (React.isValidElement<{ children?: React.ReactNode }>(node)) return textOf(node.props.children);
+  return "";
 }
 
-export default function BlogPost({ post }: BlogPostProps) {
-  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<{
-    src: string;
-    alt: string;
-    originRect: DOMRect | null;
-  } | null>(null);
-
-  const handleCopyCode = async (code: string) => {
+function CodeBlock({ lang, code, children }: { lang: string; code: string; children: React.ReactNode }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
     try {
       await navigator.clipboard.writeText(code);
-      setCopiedIndex(1);
-      setTimeout(() => setCopiedIndex(null), 2000);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
     } catch (err) {
       console.error("Failed to copy text:", err);
     }
   };
+  return (
+    <div className="group relative my-7 overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+        <span className="font-mono text-[11px] text-gray-500">{lang}</span>
+        <button
+          onClick={copy}
+          className="rounded p-1 text-gray-500 opacity-0 transition-opacity hover:text-gray-900 group-hover:opacity-100 focus:opacity-100"
+          title="Copy code"
+          aria-label="Copy code"
+        >
+          {copied ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+      <pre className="m-0 overflow-x-auto bg-transparent">{children}</pre>
+    </div>
+  );
+}
 
-  const handleImageClick = (
-    src: string,
-    alt: string,
-    event: React.MouseEvent<HTMLImageElement>
-  ) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setLightboxImage({ src, alt, originRect: rect });
-  };
+export default function BlogPost({ post }: { post: BlogPostType }) {
+  const [lightbox, setLightbox] = useState<{ src: string; alt: string; originRect: DOMRect | null } | null>(null);
+  const headings = useMemo(() => extractHeadings(post.content), [post.content]);
 
   const components: Components = {
-    img({ src, alt, ...props }: any) {
-      if (!src) return null;
-
+    h2({ children }) {
+      return <h2 id={slugify(textOf(children))}>{children}</h2>;
+    },
+    img({ src, alt }) {
+      if (!src || typeof src !== "string") return null;
       return (
-        <>
-          <img
-            src={src}
-            alt={alt || ""}
-            className="w-full hover:scale-105  transition-all duration-200 cursor-zoom-in"
-            onClick={(e) => handleImageClick(src, alt || "", e)}
-            {...props}
-          />
-          {alt && (
-            <span className="block text-center text-sm text-gray-500 mt-2 italic">
-              {alt}
-            </span>
-          )}
-        </>
+        <img
+          src={src}
+          alt={alt || ""}
+          loading="lazy"
+          className="cursor-zoom-in"
+          onClick={(e) => setLightbox({ src, alt: alt || "", originRect: e.currentTarget.getBoundingClientRect() })}
+        />
       );
     },
-    code({ node, className, children, ...props }: any) {
-      const match = /language-(\w+)/.exec(className || "");
-
-      const getCodeString = (node: any, children: any) => {
-        if (node?.children?.[0]?.value) {
-          return node.children[0].value;
-        }
-
-        if (Array.isArray(children)) {
-          return children
-            .map((child) =>
-              typeof child === "string" ? child : child?.props?.children || ""
-            )
-            .join("");
-        }
-
-        if (children?.props?.children) {
-          return Array.isArray(children.props.children)
-            ? children.props.children.join("")
-            : children.props.children;
-        }
-
-        return String(children || "");
-      };
-
-      const codeString = getCodeString(node, children);
-
-      if (match) {
+    p({ children }) {
+      // A paragraph holding only an image becomes a numbered figure.
+      const kids = React.Children.toArray(children);
+      const only = kids.length === 1 ? kids[0] : null;
+      if (React.isValidElement<{ alt?: string }>(only) && (only.type === "img" || only.props.alt !== undefined)) {
         return (
-          <div className="relative group my-6">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg">
-              <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-                <span className="text-xs text-gray-500 font-mono">
-                  {match[1]}
-                </span>
-                <button
-                  onClick={() => handleCopyCode(codeString)}
-                  className="p-1 bg-white hover:bg-gray-50 border border-gray-200 rounded opacity-0 group-hover:opacity-100 transition-all duration-200"
-                  title="Copy code"
-                >
-                  {copiedIndex ? (
-                    <Check className="w-3 h-3 text-green-600" />
-                  ) : (
-                    <Copy className="w-3 h-3 text-gray-600" />
-                  )}
-                </button>
-              </div>
-              <pre className="m-0! bg-transparent! overflow-x-auto">
-                <code
-                  className={`language-${match[1]} bg-transparent! text-sm`}
-                  {...props}
-                >
-                  {children}
-                </code>
-              </pre>
-            </div>
-          </div>
+          <figure className="figure my-9">
+            {only}
+            {only.props.alt && <figcaption className="figure-caption">{only.props.alt}</figcaption>}
+          </figure>
         );
       }
-
-      return (
-        <code className="bg-gray-100 text-gray-900 px-1 py-0.5 rounded font-mono text-sm">
-          {children}
-        </code>
-      );
+      return <p>{children}</p>;
     },
-    p({ children, ...props }) {
-      // Check if the paragraph contains only an image
-      const hasOnlyImage =
-        React.Children.count(children) === 1 &&
-        React.isValidElement(children) &&
-        children.type === "img";
-
-      if (hasOnlyImage) {
-        // Wrap the image in a div outside of the paragraph
-        return <div className="my-6 cursor-pointer group">{children}</div>;
-      }
-
+    pre({ children }) {
+      const child = React.Children.only(children) as React.ReactElement<{ className?: string; children?: React.ReactNode }>;
+      const lang = /language-(\w+)/.exec(child.props.className || "")?.[1] ?? "text";
       return (
-        <p className="mb-5 leading-relaxed font-light" {...props}>
+        <CodeBlock lang={lang} code={textOf(child.props.children)}>
           {children}
-        </p>
+        </CodeBlock>
       );
     },
   };
@@ -159,136 +103,81 @@ export default function BlogPost({ post }: BlogPostProps) {
   return (
     <div className="min-h-screen bg-white text-gray-900">
       <ReadingProgress />
+      {/* Extra top room on small screens: Qubi hangs from the progress bar there. */}
+      <div className="pt-12 lg:pt-0">
+        <SiteHeader back wide />
+      </div>
 
-      {/* Navigation and Share */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-        className="max-w-2xl mx-auto px-6 pt-20 lg:pt-8"
-      >
-        <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="inline-flex items-center text-gray-500 hover:text-gray-700 transition-colors text-sm font-light"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Link>
-
-          <ShareButton variant="minimal" title={post.title} />
-        </div>
-      </motion.div>
-
-      {/* Article */}
-      <article
-        className="max-w-2xl mx-auto px-6 py-8"
-        data-buddy-topics={post.tags.map((t) => t.toLowerCase()).join("|")}
-      >
-        <motion.header
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+      {/* Wide screens: a 48rem reading column plus the contents sidebar, aligned with the header. */}
+      <div className="mx-auto max-w-3xl px-6 xl:grid xl:max-w-[67rem] xl:grid-cols-[minmax(0,1fr)_14rem] xl:gap-16">
+        <article
+          className="min-w-0 pt-14 sm:pt-20"
+          data-buddy-topics={post.tags.map((t) => t.toLowerCase()).join("|")}
         >
-          <div className="mb-6">
-            <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
-              <PixelIcon tags={post.tags} size={18} className="text-gray-700 mr-1" />
-              <span className="font-light">
-                {new Date(post.date).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </span>
-              <span className="font-light">•</span>
-              <span className="font-light">{post.readTime}</span>
+          <header>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 font-mono text-xs text-gray-500">
+              <PixelIcon tags={post.tags} size={16} className="text-gray-700" />
+              <time dateTime={post.date}>{post.date}</time>
+              <span aria-hidden>·</span>
+              <span>{post.readTime}</span>
             </div>
-
-            <div className="flex flex-wrap gap-2 mb-6">
+            <h1 className="mt-6 font-serif text-[2.2rem] leading-[1.1] tracking-tight text-gray-900 sm:text-5xl">
+              {post.title}
+            </h1>
+            <p className="mt-6 font-serif text-xl italic leading-relaxed text-gray-600">{post.description}</p>
+            <div className="mt-7 flex flex-wrap items-center gap-x-4 gap-y-2 font-mono text-xs text-gray-500">
+              {post.author && <span className="text-gray-900">{post.author.name}</span>}
               {post.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="text-sm text-gray-500 font-light border border-gray-200 bg-gray-50 px-2 py-1 rounded"
-                >
-                  {tag}
-                </span>
+                <span key={tag}>#{tag.toLowerCase().replace(/\s+/g, "-")}</span>
               ))}
             </div>
+            {post.links.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2">
+                {post.links.map((l) => (
+                  <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" className="paper-button">
+                    {l.label} <span aria-hidden>↗</span>
+                  </a>
+                ))}
+              </div>
+            )}
+            <div className="mt-10 border-t border-dashed border-gray-300" />
+          </header>
+
+          <div className="prose mt-10">
+            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeHighlight]} components={components}>
+              {post.content}
+            </ReactMarkdown>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-light mb-4 leading-tight text-gray-900 tracking-tight">
-            {post.title}
-          </h1>
-
-          <p className="text-lg text-gray-600 leading-relaxed font-light">
-            {post.description}
-          </p>
-
-          <div className="border-t border-gray-100 my-6"></div>
-        </motion.header>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-          className="prose prose-lg max-w-none"
-        >
-          <ReactMarkdown
-            remarkPlugins={[remarkGfm]}
-            rehypePlugins={[rehypeRaw, rehypeHighlight]}
-            components={components}
-          >
-            {post.content}
-          </ReactMarkdown>
-        </motion.div>
-
-        {/* Share section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="mt-12 pt-6 border-t border-gray-100"
-        >
-          <div className="text-left">
-            <p className="text-gray-600 mb-3 font-light">
-              Found this article helpful?
-            </p>
+          <footer className="mt-16 flex flex-col gap-6 border-t border-dashed border-gray-300 pt-8 sm:flex-row sm:items-center sm:justify-between">
+            {post.author && (
+              <div className="flex items-center gap-4">
+                <div className="flex h-11 w-11 items-center justify-center rounded-md bg-gray-900 font-serif text-lg text-white">
+                  {post.author.name.charAt(0)}
+                </div>
+                <div>
+                  <p className="font-serif text-lg text-gray-900">{post.author.name}</p>
+                  {post.author.title && <p className="font-mono text-xs text-gray-500">{post.author.title}</p>}
+                </div>
+              </div>
+            )}
             <ShareButton title={post.title} />
-          </div>
-        </motion.div>
+          </footer>
+        </article>
 
-        {/* Author section */}
-        {post.author && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="mt-16 pt-8 border-t border-gray-100"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-gray-900 text-white rounded-full flex items-center justify-center font-medium text-sm">
-                {post.author.name.charAt(0)}
-              </div>
-              <div>
-                <h3 className="font-light text-gray-900">{post.author.name}</h3>
-                {post.author.title && (
-                  <p className="text-gray-600 text-sm font-light">
-                    {post.author.title}
-                  </p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </article>
+        <aside className="hidden pt-20 xl:block">
+          <Toc headings={headings} />
+        </aside>
+      </div>
 
-      {/* Image Lightbox */}
+      <SiteFooter />
+
       <ImageLightbox
-        src={lightboxImage?.src || "/placeholder.svg"}
-        alt={lightboxImage?.alt || ""}
-        isOpen={!!lightboxImage}
-        onClose={() => setLightboxImage(null)}
-        originRect={lightboxImage?.originRect || null}
+        src={lightbox?.src || ""}
+        alt={lightbox?.alt || ""}
+        isOpen={!!lightbox}
+        onClose={() => setLightbox(null)}
+        originRect={lightbox?.originRect}
       />
     </div>
   );

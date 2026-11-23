@@ -101,8 +101,8 @@ export default function PullCord() {
           }}
         >
           <svg width="21" height="24" viewBox="-1 0 7 8" shapeRendering="crispEdges" aria-hidden>
-            <path d={toPath(OUTLINE)} fill="#3d2c3e" />
-            <path d={toPath(GLASS)} fill={lit ? "#ffd76a" : "#fbf8ff"} />
+            <path d={toPath(OUTLINE)} fill="#2b2638" />
+            <path d={toPath(GLASS)} fill={lit ? "#f2c46b" : "#fbf9f4"} />
             <path d={toPath(SHINE)} fill="#ffffff" opacity={lit ? 0.9 : 0.7} />
             <path d={toPath(BASE)} fill={lit ? "#9a8fa6" : "#7d7287"} />
           </svg>

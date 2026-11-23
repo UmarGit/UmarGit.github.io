@@ -8,6 +8,11 @@ interface Author {
   avatar?: string;
 }
 
+export interface PostLink {
+  label: string;
+  href: string;
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -17,6 +22,8 @@ export interface BlogPost {
   content: string;
   readTime: string;
   author?: Author;
+  /** Paper-style buttons under the title (arXiv, code, demo…). */
+  links: PostLink[];
 }
 
 interface Frontmatter {
@@ -25,6 +32,7 @@ interface Frontmatter {
   date: string;
   tags: string[];
   author?: Author;
+  links?: PostLink[];
 }
 
 const BLOG_DIR = join(process.cwd(), "content/blog");
@@ -61,6 +69,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
           content,
           readTime: calculateReadTime(content),
           author: frontmatter.author,
+          links: frontmatter.links ?? [],
         };
       })
     );
@@ -103,6 +112,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       content,
       readTime: calculateReadTime(content),
       author: frontmatter.author,
+      links: frontmatter.links ?? [],
     };
   } catch (error) {
     console.error(`Error loading post ${slug}:`, error);

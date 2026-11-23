@@ -1,5 +1,5 @@
 /**
- * Qubi: the site's resident. A soft violet square (16×16, 1:1) with a single
+ * Qubi: the site's resident. A soft dusty-violet square (16×16, 1:1) with a single
  * floating "bit" above its head. Its abilities (qubit, token, glitch) are
  * effects layered on this one body by <Buddy/>.
  *
@@ -21,15 +21,16 @@ export type Cell = readonly [x: number, y: number, color: string];
 
 export const GRID = { w: 16, h: 16 } as const;
 
+// Dusty violet on ink, to sit inside the paper & ink palette.
 export const PALETTE: Record<string, string> = {
-  O: "#2a1f4d",
-  V: "#7c5cff",
-  h: "#ab97ff",
-  s: "#6145e6",
-  b: "#ff8fc8",
-  E: "#1b1433",
-  W: "#ffffff",
-  M: "#1b1433",
+  O: "#2b2638",
+  V: "#8e84c8",
+  h: "#b3abdd",
+  s: "#776db3",
+  b: "#e59aae",
+  E: "#1c1a24",
+  W: "#fbf9f4",
+  M: "#1c1a24",
 };
 
 const BODY = [

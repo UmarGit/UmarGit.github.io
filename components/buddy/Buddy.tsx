@@ -71,6 +71,7 @@ export default function Buddy() {
   const outerRef = useRef<HTMLDivElement>(null);
   const innerRef = useRef<HTMLDivElement>(null);
   const layerRef = useRef<HTMLDivElement>(null);
+  const bubbleRef = useRef<HTMLDivElement>(null);
 
   const [cell, setCell] = useState(3.2);
   const [expr, setExpr] = useState<Expression>("open");
@@ -80,6 +81,7 @@ export default function Buddy() {
   const [cursorOn, setCursorOn] = useState(true);
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null);
   const [bubbleLeft, setBubbleLeft] = useState(false);
+  const [narrow, setNarrow] = useState(false);
   const [ready, setReady] = useState(false);
 
   const st = useRef({
@@ -169,8 +171,10 @@ export default function Buddy() {
     if (s.kind === "el") {
       const r = s.el.getBoundingClientRect();
       if (s.el.hasAttribute("data-buddy-home")) {
-        // Beside the name, standing on its baseline.
-        return { x: clamp(r.right + hw + 12, hw + 4, W - hw - 4), y: r.bottom - r.height * 0.16 };
+        // Beside the name's last line (it wraps on phones), on its baseline.
+        const lines = s.el.getClientRects();
+        const l = lines.length ? lines[lines.length - 1] : r;
+        return { x: clamp(l.right + hw + 12, hw + 4, W - hw - 4), y: l.bottom - l.height * 0.16 };
       }
       return { x: clamp(r.right - 30, hw + 4, W - hw - 4), y: r.top };
     }
@@ -420,6 +424,7 @@ export default function Buddy() {
       const c = window.innerWidth < 640 ? 2.6 : 3.2;
       s.cell = c;
       setCell(c);
+      setNarrow(window.innerWidth < 640);
     };
     sizeUp();
     window.addEventListener("resize", sizeUp);
@@ -651,6 +656,15 @@ export default function Buddy() {
         const sy = s.sy + breathe;
         const sx = 1 + (1 - s.sy) * 0.85;
         inner.style.transformOrigin = `${ax * c}px ${ay * c}px`;
+        // Phones: the bubble sits above Qubi, centred but kept on screen.
+        const bub = bubbleRef.current;
+        if (bub && W < 640) {
+          const left = s.x - ax * c;
+          const bw = bub.offsetWidth;
+          const want = (GRID.w * c - bw) / 2;
+          bub.style.left = `${clamp(want, 12 - left, W - 12 - bw - left)}px`;
+          bub.style.right = "auto";
+        }
         inner.style.transform = `rotate(${(s.theta * 180) / Math.PI}deg) scale(${sx}, ${sy})`;
       }
     };
@@ -859,8 +873,15 @@ export default function Buddy() {
         {(bubble || fx.tokens) && (
           <div
             key={fx.tokens ? "tokens" : bubble!.id}
-            className={`buddy-bubble ${bubbleLeft ? "buddy-bubble-left" : ""}`}
-            style={bubbleLeft ? { right: `${(GRID.w - 1) * cell}px` } : { left: `${(GRID.w - 1) * cell}px` }}
+            ref={bubbleRef}
+            className={`buddy-bubble ${bubbleLeft ? "buddy-bubble-left" : ""} ${narrow ? "buddy-bubble-above" : ""}`}
+            style={
+              narrow
+                ? undefined // phones: above Qubi; horizontal position is set in the loop
+                : bubbleLeft
+                  ? { right: `${(GRID.w - 1) * cell}px` }
+                  : { left: `${(GRID.w - 1) * cell}px` }
+            }
           >
             {fx.tokens ? (
               <span className="buddy-tokens">
