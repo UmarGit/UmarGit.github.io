@@ -5,6 +5,7 @@ import Link from "next/link"
 import { ArrowUpRight, Dot } from "lucide-react"
 import { useState } from "react"
 import type { BlogPost } from "@/lib/mdx"
+import PixelIcon from "@/components/pixel-icon"
 
 interface BlogListProps {
   posts: BlogPost[]
@@ -18,14 +19,16 @@ export default function BlogList({ posts }: BlogListProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {posts.map((post, index) => (
         <motion.article
           key={post.slug}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: index * 0.1 }}
-          className="group"
+          className="group pixel-shelf"
+          data-buddy-perch
+          data-buddy-topics={post.tags.map((t) => t.toLowerCase()).join("|")}
           onMouseEnter={() => setHoveredPost(post.slug)}
           onMouseLeave={() => setHoveredPost(null)}
         >
@@ -34,6 +37,7 @@ export default function BlogList({ posts }: BlogListProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center mb-2 space-x-2 text-sm text-gray-500">
+                    <PixelIcon tags={post.tags} size={16} className="text-gray-700 mr-1" />
                     <span className="font-light">
                       {new Date(post.date).toLocaleDateString("en-US", {
                         month: "short",

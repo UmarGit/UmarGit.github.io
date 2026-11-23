@@ -68,7 +68,7 @@
     font-optical-sizing: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: white;
+    background-color: var(--color-white);
   }
 
   ::-webkit-scrollbar {
@@ -293,5 +293,346 @@
   }
   body {
     @apply bg-white text-gray-900;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Dark mode: flip the gray scale. Every bg-white / text-gray-* utility reads
+   these variables, so the pages need no dark: variants.
+   ------------------------------------------------------------------------ */
+:root.dark {
+  color-scheme: dark;
+  --color-white: #121016;
+  --color-gray-50: #19161e;
+  --color-gray-100: #211d27;
+  --color-gray-200: #2d2834;
+  --color-gray-300: #3d3745;
+  --color-gray-400: #6e6778;
+  --color-gray-500: #918a9b;
+  --color-gray-600: #aba5b4;
+  --color-gray-700: #c6c1cd;
+  --color-gray-800: #dedae3;
+  --color-gray-900: #f1eef4;
+  --color-gray-950: #f8f6fa;
+
+  --background: 270 12% 7%;
+  --foreground: 280 15% 95%;
+  --popover: 270 12% 10%;
+  --popover-foreground: 280 15% 95%;
+  --accent: 270 10% 16%;
+  --accent-foreground: 280 15% 95%;
+  --border: 270 9% 19%;
+  --input: 270 9% 19%;
+  --ring: 280 15% 85%;
+}
+
+body {
+  transition: background-color 350ms ease, color 350ms ease;
+}
+
+:root.dark ::selection {
+  background-color: #f1eef4;
+  color: #121016;
+}
+
+:root.dark .prose img {
+  filter: brightness(0.92);
+}
+
+/* GitHub-dark-ish syntax colours. */
+:root.dark .hljs { color: #e6edf3; }
+:root.dark .hljs-comment, :root.dark .hljs-quote, :root.dark .hljs-meta { color: #8b949e; }
+:root.dark .hljs-keyword, :root.dark .hljs-selector-tag { color: #ff7b72; }
+:root.dark .hljs-string, :root.dark .hljs-doctag, :root.dark .hljs-regexp, :root.dark .hljs-link { color: #a5d6ff; }
+:root.dark .hljs-title, :root.dark .hljs-section, :root.dark .hljs-selector-id, :root.dark .hljs-type, :root.dark .hljs-class { color: #d2a8ff; }
+:root.dark .hljs-variable, :root.dark .hljs-template-variable, :root.dark .hljs-number, :root.dark .hljs-literal,
+:root.dark .hljs-symbol, :root.dark .hljs-bullet, :root.dark .hljs-built_in, :root.dark .hljs-builtin-name { color: #79c0ff; }
+:root.dark .hljs-tag, :root.dark .hljs-name, :root.dark .hljs-attribute { color: #7ee787; }
+:root.dark .hljs-addition { background: #12261e; }
+:root.dark .hljs-deletion { background: #2d1214; }
+
+/* ------------------------------------------------------------------------
+   Mochi
+   ------------------------------------------------------------------------ */
+.buddy-root,
+.buddy-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 55;
+}
+
+.buddy-outer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  will-change: transform;
+  transition: opacity 300ms ease;
+}
+
+.buddy-inner {
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  will-change: transform;
+  filter: drop-shadow(0 2px 0 rgb(61 44 62 / 0.12));
+}
+
+.buddy-inner:active {
+  cursor: grabbing;
+}
+
+.buddy-bubble {
+  position: absolute;
+  top: 0;
+  padding: 3px 8px;
+  font: 500 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap;
+  color: #3d2c3e;
+  background: #fff;
+  border: 2px solid #3d2c3e;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 rgb(61 44 62 / 0.18);
+  transform-origin: left bottom;
+  animation: buddy-pop 260ms cubic-bezier(0.3, 1.7, 0.5, 1) both;
+}
+
+.buddy-bubble-left {
+  transform-origin: right bottom;
+}
+
+.buddy-particle {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  animation: buddy-float 1.4s ease-out both;
+}
+
+.buddy-z,
+.buddy-note {
+  font: 700 13px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #8f86a0;
+}
+
+.buddy-note {
+  color: #ff6f91;
+}
+
+@keyframes buddy-pop {
+  from { opacity: 0; transform: scale(0.5) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes buddy-float {
+  0% { opacity: 0; transform: translate(-50%, 0) scale(0.6); }
+  15% { opacity: 1; transform: translate(-50%, -8px) scale(1); }
+  100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), -56px) scale(0.9); }
+}
+
+/* ------------------------------------------------------------------------
+   Pull cord
+   ------------------------------------------------------------------------ */
+.pullcord {
+  position: fixed;
+  top: 0;
+  right: 14px;
+  z-index: 60;
+  pointer-events: none;
+}
+
+.pullcord-sway {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform-origin: top center;
+  animation: cord-sway 4.5s ease-in-out infinite;
+}
+
+.pullcord-sway:hover,
+.pullcord-sway.is-dragging {
+  animation-play-state: paused;
+}
+
+.pullcord-string {
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--color-gray-400) 0 3px,
+    transparent 3px 5px
+  );
+}
+
+.pullcord-bulb {
+  pointer-events: auto;
+  margin-top: -1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+  transition: filter 300ms ease, transform 150ms ease;
+}
+
+.pullcord-bulb:hover {
+  transform: scale(1.08);
+}
+
+.pullcord-bulb:active {
+  cursor: grabbing;
+}
+
+.pullcord-bulb.is-lit {
+  filter: drop-shadow(0 0 6px rgb(255 215 106 / 0.75)) drop-shadow(0 0 14px rgb(255 215 106 / 0.35));
+}
+
+@keyframes cord-sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50% { transform: rotate(2.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pullcord-sway,
+  .buddy-bubble,
+  .buddy-particle {
+    animation: none;
+  }
+  .buddy-particle {
+    display: none;
+  }
+}
+
+@media print {
+  .buddy-root,
+  .pullcord {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------------
+   Pixel world
+   ------------------------------------------------------------------------ */
+
+/* Each post is a shelf: a dashed pixel line the lab assistant stands on. */
+.pixel-shelf {
+  position: relative;
+}
+.pixel-shelf::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-gray-300) 0 6px,
+    transparent 6px 10px
+  );
+}
+
+/* Reading progress, drawn in 8px blocks. */
+.pixel-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  z-index: 50;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-gray-100) 0 6px,
+    transparent 6px 8px
+  );
+}
+.pixel-progress-fill {
+  height: 100%;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--color-gray-800) 0 6px,
+    transparent 6px 8px
+  );
+  transition: width 120ms steps(4, end);
+}
+
+.buddy-bubble {
+  white-space: normal;
+  width: max-content;
+  max-width: 230px;
+}
+
+/* ------------------------------------------------------------------------
+   Qubi: abilities and signature bit
+   ------------------------------------------------------------------------ */
+.buddy-inner {
+  position: relative;
+}
+
+/* The floating bit above Qubi's head. */
+.buddy-bit {
+  position: absolute;
+  background: #b9a8ff;
+  box-shadow: 0 0 0 1px #2a1f4d, 0 0 8px rgb(124 92 255 / 0.55);
+  animation: buddy-bit 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes buddy-bit {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* Qubit: two ghosts shimmer either side of a faded body. */
+.buddy-body {
+  transition: opacity 250ms ease, filter 400ms ease;
+}
+.buddy-body.is-superposed {
+  opacity: 0.25;
+}
+.buddy-ghost {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  animation: buddy-shimmer 900ms ease-in-out infinite alternate;
+}
+.buddy-ghost-0 {
+  filter: hue-rotate(-80deg) saturate(1.15);
+}
+.buddy-ghost-1 {
+  animation-delay: -450ms;
+}
+@keyframes buddy-shimmer {
+  from { opacity: 0.25; transform: translateX(var(--off)); }
+  to { opacity: 0.8; transform: translateX(var(--off)); }
+}
+.buddy-inner.is-teal .buddy-body {
+  filter: hue-rotate(-80deg) saturate(1.15);
+}
+
+/* Glitch: chromatic split while the slice is offset. */
+.buddy-inner.is-glitch {
+  filter: drop-shadow(2px 0 #ff3d6e) drop-shadow(-2px 0 #2ee6d6);
+}
+
+/* Token chips in the speech bubble, like a tokenizer view. */
+.buddy-tokens {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.buddy-token {
+  padding: 0 3px;
+  border-radius: 3px;
+  animation: buddy-pop 180ms ease-out both;
+}
+.buddy-token-0 { background: #e6defe; }
+.buddy-token-1 { background: #d3f5ef; }
+.buddy-token-2 { background: #ffe9c7; }
+.buddy-token-3 { background: #ffd9e8; }
+
+@media (prefers-reduced-motion: reduce) {
+  .buddy-bit,
+  .buddy-ghost {
+    animation: none;
   }
 }

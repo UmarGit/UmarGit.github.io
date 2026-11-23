@@ -16,6 +16,7 @@ import ReadingProgress from "@/components/reading-progress";
 import ImageLightbox from "@/components/image-lightbox";
 import type { BlogPost as BlogPostType } from "@/lib/mdx";
 import ShareButton from "@/components/share-button";
+import PixelIcon from "@/components/pixel-icon";
 
 interface BlogPostProps {
   post: BlogPostType;
@@ -164,7 +165,7 @@ export default function BlogPost({ post }: BlogPostProps) {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="max-w-2xl mx-auto px-6 pt-8"
+        className="max-w-2xl mx-auto px-6 pt-20 lg:pt-8"
       >
         <div className="flex items-center justify-between">
           <Link
@@ -180,7 +181,10 @@ export default function BlogPost({ post }: BlogPostProps) {
       </motion.div>
 
       {/* Article */}
-      <article className="max-w-2xl mx-auto px-6 py-8">
+      <article
+        className="max-w-2xl mx-auto px-6 py-8"
+        data-buddy-topics={post.tags.map((t) => t.toLowerCase()).join("|")}
+      >
         <motion.header
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -188,6 +192,7 @@ export default function BlogPost({ post }: BlogPostProps) {
         >
           <div className="mb-6">
             <div className="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+              <PixelIcon tags={post.tags} size={18} className="text-gray-700 mr-1" />
               <span className="font-light">
                 {new Date(post.date).toLocaleDateString("en-US", {
                   month: "long",

@@ -10,7 +10,8 @@ export default async function Home() {
       {/* Hero section */}
       <header className="max-w-2xl mx-auto px-6 pt-16 pb-12 w-full">
         <h1 className="text-2xl md:text-3xl font-light text-gray-900 mb-4 leading-tight tracking-tight">
-          Hi, I'm Umar Ahmed
+          {/* The lab assistant stands right after this span. */}
+          <span data-buddy-home>Hi, I'm Umar Ahmed</span>
         </h1>
         <p className="text-lg text-gray-600 leading-relaxed font-light">
           I write about software engineering, machine learning, data science, and quantum computing.
@@ -19,7 +20,12 @@ export default async function Home() {
 
       {/* Blog posts */}
       <main className="max-w-2xl mx-auto px-6 pb-16 w-full min-h-[calc(100vh-300px)]">
-        <h2 className="text-xl font-light text-gray-900 mb-8">Recent Posts</h2>
+        <h2 className="flex items-baseline justify-between text-xl font-light text-gray-900 mb-6">
+          <span>Lab notebook</span>
+          <span className="font-mono text-xs text-gray-400">
+            {posts.length} {posts.length === 1 ? "entry" : "entries"}
+          </span>
+        </h2>
 
         <Suspense
           fallback={
