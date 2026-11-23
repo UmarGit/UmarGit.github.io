@@ -70,7 +70,7 @@ export default function BlogList({ posts }: BlogListProps) {
                   }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors ml-6 flex-shrink-0" />
+                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors ml-6 shrink-0" />
                 </motion.div>
               </div>
             </div>

@@ -1,0 +1,190 @@
+---
+title: "Parsed, Plausible, Wrong: How Output Format Controls Silent Errors in Small Models"
+description: "A fine-tuned parser that prints a clean but wrong ticket fails silently. Across 300 runs on two sub-billion models, we found that writing the target in plain words, not just making it shorter, cuts those silent errors by up to 2.3× while using 4× fewer tokens."
+date: "2026-11-12"
+tags: ["machine learning", "llm", "semantic parsing", "fine-tuning", "research"]
+author:
+  name: "Umar Ahmed"
+  title: "Senior Software Engineer & ML Researcher"
+---
+
+A small language model that turns *"a large pizza, no onions"* into structure can fail in two ways. It can print something broken, which any system rejects and retries. Or it can print a **clean, well-formed order that nobody placed**. The second kind goes straight to the kitchen. Nothing crashes, nothing is logged, and nobody notices until the box is opened.
+
+We call that a **silent error**, and our new paper asks a simple question: *does the output format you pick for the model control how often it happens?*
+
+📄 **Paper:** [arXiv:2611.17169](https://arxiv.org/abs/2611.17169) · [Hugging Face Papers](https://huggingface.co/papers/2611.17169)
+🍕 **Try it:** [Pizza Order Parser Space](https://huggingface.co/spaces/hugging-apps/pizza-order-parser), built for us by the Hugging Face team
+💻 **Code & models:** [github.com/UmarGit/coffee-llm](https://github.com/UmarGit/coffee-llm)
+
+![The word-format parser in action](/images/parsed-plausible-wrong/demo.gif)
+
+---
+
+## 📌 Where This Started
+
+This began with a café ordering parser I had deployed. I'd chosen a compact output format for speed, and my small hand-written test set couldn't tell formats apart. So we moved to a public benchmark with a human-written test set, **PIZZA** (Arkoudas et al., 2022), and set out to measure it properly.
+
+The intuitive hypothesis was: *fewer output tokens → less room for error*. That turned out to be wrong in the form we first stated it.
+
+---
+
+## 🧩 Six Encodings of One Tree
+
+Comparing unrelated formats confounds *length* with *form*. So we built six **lossless** encodings of the exact same target tree; every one decodes back to the original on every dev and test utterance.
+
+Here's one real test order, *"i want a pie with pepperoni and extra cheese"*:
+
+| Format | Qwen tokens | Target |
+|---|---|---|
+| `exr` (native) | 38 | `(ORDER (PIZZAORDER (NUMBER 1 ) (COM...` |
+| `json` | 33 | `{"orders":[{"type":"p","attrs":[{"n...` |
+| `exr-short` | 25 | `(O (P (N 1) (C (Q EXTRA) (T CHEESE)...` |
+| `tagged` | 13 | `pizza n=1 extra=cheese topp=pepperoni` |
+| `dsl` | 8 | `p 1 +cheese pepperoni` |
+| `words` | 7 | `pizza 1 extra cheese pepperoni` |
+
+The key design trick is two **matched-length pairs**:
+
+* **`exr` ↔ `json`**: about the same length, both bracket-heavy.
+* **`dsl` ↔ `words`**: identical structure; the only difference is whether a marker is written `+cheese` or `extra cheese`.
+
+If `words` beats `dsl`, it can't be because it's shorter.
+
+### Characters are not tokens
+
+A fun detail: `words` is the *longer* of its pair in characters (43.1 vs 34.9) but costs *fewer* Qwen tokens (10.3 vs 10.8). `+cheese` splits into three subwords; `extra cheese` stays two. **Symbols save characters, not tokens.**
+
+![Tokenization of the same order across formats](/images/parsed-plausible-wrong/tokenization.svg)
+
+---
+
+## 🧪 The Setup
+
+* **Models:** Qwen3.5-0.8B and LFM2.5-350M (a largely convolutional model with a ~4× smaller vocabulary).
+* **Training:** LoRA, rank 16, on all linear projections; loss on the completion only; early stopping on dev.
+* **Grid:** 6 formats × 5 training pool sizes (1k → 2.46M) × 5 seeds × 2 models = **300 runs**.
+* **Statistics:** hierarchical bootstrap (10,000 resamples over seeds *and* utterances) with Holm correction, **fixed before any result was read**.
+
+Every test order lands in exactly one of four buckets:
+
+1. ✅ **Correct**: exact match
+2. 🤫 **Silent error**: parses into a tree that's wrong. *The caller can't detect it.*
+3. ⚠️ **Unparseable**: visible, can be retried
+4. 🙅 **Refused**: the model said "not an order". Also visible.
+
+We treat the **silent rate** as the number a deployment should minimise, and report exact match beside it for comparison with prior work.
+
+---
+
+## 📊 Result 1: Shorter Is Not Better
+
+![Exact match vs output tokens](/images/parsed-plausible-wrong/accuracy_vs_tokens.svg)
+
+Across the four "length ladder" formats, removing tokens never reliably helped. `exr-short`, which *only renames* `exr`'s constructors to single letters, **lost 10.6 points** on Qwen. Meanwhile `tagged`, half as long as `exr`, matched it. Length doesn't predict accuracy in either direction.
+
+---
+
+## 📊 Result 2: Surface Form Is What Matters
+
+The matched pair settles it. `words` beat `dsl` in **10 of 10** model × pool-size cells, by **+7.8 points on Qwen** and **+5.4 on LFM2** at the full pool.
+
+And on LFM2, the token order *inverts*: `words` emits 12.0 tokens vs `dsl`'s 11.4, and is **still more accurate**. A format that's longer and better isn't winning by being short.
+
+Full-pool results on 1,357 human-written test orders:
+
+| Format | Tokens | Exact match ↑ | Silent ↓ | Latency |
+|---|---|---|---|---|
+| **Qwen3.5-0.8B** | | | | |
+| `exr` | 44.3 | 85.8% | 10.3% | 1171 ms |
+| `json` | 44.1 | 81.6% | 14.9% | 1220 ms |
+| `exr-short` | 32.3 | 75.2% | 17.4% | 903 ms |
+| `tagged` | 22.2 | 85.9% | 11.6% | 616 ms |
+| `dsl` | 11.3 | 79.7% | 8.3% | 325 ms |
+| **`words`** | **10.9** | **87.5%** | **4.5%** | **317 ms** |
+| **LFM2.5-350M** | | | | |
+| `exr` | 52.4 | 74.0% | 17.9% | 821 ms |
+| `words` | 12.0 | **77.4%** | **10.0%** | 186 ms |
+
+For reference, the published BART-Large `exr` system reaches 78.6% on this test set, trained without our refusal/correction data, so it isn't a like-for-like comparison.
+
+---
+
+## 🤫 Result 3: Silent Errors Halve, and Negation Is Why
+
+![Where the test orders go](/images/parsed-plausible-wrong/error_composition.png)
+
+Exact match and silent rate rank formats *differently*. `exr` and `json` almost always parse, so nearly everything they get wrong, they get wrong **silently**. `words` fails to parse a bit more often, but those failures are visible.
+
+* Qwen: **4.5%** silent with `words` vs **10.3%** with `exr`, a **2.3×** reduction
+* LFM2: **10.0%** vs **17.9%**, a **1.8×** reduction
+* The gap separates at **every pool size on both models**
+
+When we classified every silent error by what it changed, the biggest difference was **negation**:
+
+| Format (Qwen) | Silent errors | % that are negation |
+|---|---|---|
+| `exr` | 698 | 19% |
+| `json` | 1011 | 34% |
+| `tagged` | 786 | 33% |
+| `dsl` | 561 | 30% |
+| **`words`** | **303** | **5%** |
+
+As a rate, Qwen makes a silent negation error on **2.0%** of orders with `exr` and **0.2%** with `words`. The reason is almost embarrassingly simple: `words` writes *no onions* the way customers say it, while every other format has to translate it into a `NOT(...)` construct or a `!` sigil.
+
+---
+
+## 🛡️ The Guardrail: Refusing and Listening
+
+PIZZA has no notion of "not an order": a model trained on it turns *"hehe hehe"* into a pizza. So every run was also trained on:
+
+* **Refusals (30% of training data):** chatter, gibberish, off-menu items, orders with an unknown word. The model outputs `?` (or the format's equivalent).
+* **Self-corrections (10%):** *"a pizza with cheese, wait no cheese, only tomato sauce"* across nine correction types.
+
+Both were evaluated on **held-out vocabulary and cue phrases**:
+
+* Held-out negatives refused **95.9–99.0%** of the time (format barely matters)
+* The cheese self-correction bug a user once reported against an earlier model: **fixed in 60 of 60** full-pool runs
+* `words` was again the best format at applying corrections
+
+### The honest price
+
+Strict refusal has a measured cost: **2.1–10.1%** of *real* orders get refused. Reading them, they're genuine orders in human phrasing the synthetic grammar never produces: greetings, thanks, little stories (*"i'm having a bunch of people over tonight so i need five pizzas…"*). An order containing a greeting, *please*, or *thanks* is refused 6.1% of the time vs 2.6% for others. **The strict rule meets politeness the training grammar doesn't contain.** A refusal is at least a detectable error, so the system can ask again.
+
+---
+
+## 📈 It Holds at Every Scale of Data
+
+![Exact match by training pool size](/images/parsed-plausible-wrong/data_efficiency.svg)
+
+`words` is the most accurate format at **every pool size on both models**. Its lead over `exr` is largest when data is scarce (+4.0 on Qwen, +7.2 on LFM2 at 1k) and narrows with more data, but its lead over the same-length `dsl` **doesn't go away**.
+
+---
+
+## ⚡ And It's Faster
+
+![Latency vs output tokens](/images/parsed-plausible-wrong/latency_vs_tokens.svg)
+
+Latency at batch size one is linear in output tokens (Qwen: ~29 ms + 26.5 ms/token), so `words` answers **3.7× faster** than `exr` on Qwen and **4.4×** on LFM2. GPU memory barely moves: format buys you latency and accuracy, not memory.
+
+---
+
+## ✅ Limits Worth Stating
+
+* **One dataset.** PIZZA's training pool comes from a grammar with a small vocabulary; the human-written test set is the main guard against learning the grammar alone.
+* **Small models.** Both are under 1B parameters; the effect may shrink with scale.
+* **Author-generated guardrail data.** Negatives, corrections and probes were generated or written by us.
+* **Every run includes the guardrail**, so this study doesn't measure what the guardrail costs in accuracy.
+
+---
+
+## Conclusion
+
+Output format is a **free design variable** for a fine-tuned parser, and it's one most people pick for convenience. On PIZZA, writing the target in plain words matches or beats the native format's accuracy with **a quarter of the tokens**, and **roughly halves the errors nobody can detect**, mostly by getting negation right.
+
+The recipe that transfers: **compress the structure of the target, but keep its vocabulary natural.** It costs nothing at inference, needs no new labels, and you can measure it on any parser by splitting results into correct / silent / unparseable / refused.
+
+What happens when this model leaves the server and runs in your browser tab? That's the companion paper: [Clean Tickets, Wrong Orders](/blog/clean-tickets-wrong-orders).
+
+---
+
+*Joint work with Maxim Dunaev, Mohammad Nour Al Awad, Sergey Ivanov and Ivan Khodnenko at ITMO University. Thanks to the Hugging Face team for building the [interactive Space](https://huggingface.co/spaces/hugging-apps/pizza-order-parser). Models: [pizza-words-gguf](https://huggingface.co/umarsheikh303/pizza-words-gguf) and [pizza-lfm2-words-gguf](https://huggingface.co/umarsheikh303/pizza-lfm2-words-gguf).*

@@ -1,176 +1,260 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-body {
-  font-family: "Inter", sans-serif;
-  font-optical-sizing: auto;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: white;
+@plugin 'tailwindcss-animate';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-::-webkit-scrollbar {
-  width: 0;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
 }
 
-/* Custom prose styles for blog content */
-.prose {
-  @apply text-gray-700 leading-relaxed;
-}
+@layer utilities {
+  body {
+    font-family: 'Inter', sans-serif;
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: white;
+  }
 
-.prose h1 {
-  @apply text-2xl font-medium text-gray-900 mb-6 mt-10 leading-tight tracking-tight;
-}
+  ::-webkit-scrollbar {
+    width: 0;
+  }
 
-.prose h2 {
-  @apply text-xl font-medium text-gray-900 mb-4 mt-8 leading-tight tracking-tight;
-}
+  /* Custom prose styles for blog content */
+  .prose {
+    @apply text-gray-700 leading-relaxed;
+  }
 
-.prose h3 {
-  @apply text-lg font-medium text-gray-900 mb-3 mt-6 tracking-tight;
-}
+  .prose h1 {
+    @apply text-2xl font-medium text-gray-900 mb-6 mt-10 leading-tight tracking-tight;
+  }
 
-.prose p {
-  @apply mb-5 leading-relaxed font-light;
-}
+  .prose h2 {
+    @apply text-xl font-medium text-gray-900 mb-4 mt-8 leading-tight tracking-tight;
+  }
 
-/* .prose code {
+  .prose h3 {
+    @apply text-lg font-medium text-gray-900 mb-3 mt-6 tracking-tight;
+  }
+
+  .prose p {
+    @apply mb-5 leading-relaxed font-light;
+  }
+
+  /* .prose code {
   @apply bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-mono;
 } */
 
-/* .prose pre {
+  /* .prose pre {
   @apply my-6 bg-gray-50 rounded-lg border border-gray-200 overflow-x-auto;
 } */
 
-.prose pre code {
-  @apply block bg-transparent p-4 text-sm leading-relaxed;
-}
+  .prose pre code {
+    @apply block bg-transparent p-4 text-sm leading-relaxed;
+  }
 
-.prose ul {
-  @apply mb-5 space-y-2 pl-6 list-disc;
-}
+  .prose ul {
+    @apply mb-5 space-y-2 pl-6 list-disc;
+  }
 
-.prose li {
-  @apply leading-relaxed font-light;
-}
+  .prose ol {
+    @apply mb-5 space-y-2 pl-6 list-decimal;
+  }
 
-.prose blockquote {
-  @apply border-l-2 border-gray-300 pl-4 italic text-gray-600 my-6 bg-gray-50/50 py-3 rounded-r font-light;
-}
+  .prose li {
+    @apply leading-relaxed font-light;
+  }
 
-.prose strong {
-  @apply text-gray-900 font-medium;
-}
+  /* Tables (GFM). display:block lets wide tables scroll on small screens. */
+  .prose table {
+    @apply block w-full overflow-x-auto my-6 text-sm border-collapse;
+  }
 
-.prose a {
-  @apply text-gray-900 hover:text-gray-700 transition-colors underline decoration-gray-300 hover:decoration-gray-500;
-}
+  .prose th {
+    @apply text-left font-medium text-gray-900 border-b border-gray-300 px-3 py-2 whitespace-nowrap;
+  }
 
-.prose hr {
-  @apply my-8 border-gray-200;
-}
+  .prose td {
+    @apply border-b border-gray-100 px-3 py-2 font-light align-top;
+  }
 
-/* Code block styles */
-.hljs {
-  @apply bg-transparent;
-  color: #24292e;
-}
+  .prose td code,
+  .prose th code {
+    @apply text-xs;
+  }
 
-.hljs-comment,
-.hljs-quote {
-  color: #6a737d;
-  font-style: italic;
-}
+  .prose blockquote {
+    @apply border-l-2 border-gray-300 pl-4 italic text-gray-600 my-6 bg-gray-50/50 py-3 rounded-r font-light;
+  }
 
-.hljs-keyword,
-.hljs-selector-tag {
-  color: #d73a49;
-}
+  .prose strong {
+    @apply text-gray-900 font-medium;
+  }
 
-.hljs-string,
-.hljs-doctag,
-.hljs-template-variable {
-  color: #032f62;
-}
+  .prose a {
+    @apply text-gray-900 hover:text-gray-700 transition-colors underline decoration-gray-300 hover:decoration-gray-500;
+  }
 
-.hljs-title,
-.hljs-section,
-.hljs-selector-id {
-  color: #6f42c1;
-}
+  .prose hr {
+    @apply my-8 border-gray-200;
+  }
 
-.hljs-variable,
-.hljs-template-variable {
-  color: #005cc5;
-}
+  /* Code block styles */
+  .hljs {
+    @apply bg-transparent;
+    color: #24292e;
+  }
 
-.hljs-type,
-.hljs-class {
-  color: #6f42c1;
-}
+  .hljs-comment,
+  .hljs-quote {
+    color: #6a737d;
+    font-style: italic;
+  }
 
-.hljs-number,
-.hljs-literal {
-  color: #005cc5;
-}
+  .hljs-keyword,
+  .hljs-selector-tag {
+    color: #d73a49;
+  }
 
-.hljs-tag,
-.hljs-name,
-.hljs-attribute {
-  color: #22863a;
-}
+  .hljs-string,
+  .hljs-doctag,
+  .hljs-template-variable {
+    color: #032f62;
+  }
 
-.hljs-regexp,
-.hljs-link {
-  color: #032f62;
-}
+  .hljs-title,
+  .hljs-section,
+  .hljs-selector-id {
+    color: #6f42c1;
+  }
 
-.hljs-symbol,
-.hljs-bullet {
-  color: #005cc5;
-}
+  .hljs-variable,
+  .hljs-template-variable {
+    color: #005cc5;
+  }
 
-.hljs-built_in,
-.hljs-builtin-name {
-  color: #005cc5;
-}
+  .hljs-type,
+  .hljs-class {
+    color: #6f42c1;
+  }
 
-.hljs-meta {
-  color: #6a737d;
-}
+  .hljs-number,
+  .hljs-literal {
+    color: #005cc5;
+  }
 
-.hljs-deletion {
-  background: #ffeef0;
-}
+  .hljs-tag,
+  .hljs-name,
+  .hljs-attribute {
+    color: #22863a;
+  }
 
-.hljs-addition {
-  background: #f0fff4;
-}
+  .hljs-regexp,
+  .hljs-link {
+    color: #032f62;
+  }
 
-.hljs-emphasis {
-  font-style: italic;
-}
+  .hljs-symbol,
+  .hljs-bullet {
+    color: #005cc5;
+  }
 
-.hljs-strong {
-  font-weight: bold;
-}
+  .hljs-built_in,
+  .hljs-builtin-name {
+    color: #005cc5;
+  }
 
-/* Selection styling */
-::selection {
-  background-color: #000000;
-  color: #ffffff;
-}
+  .hljs-meta {
+    color: #6a737d;
+  }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
+  .hljs-deletion {
+    background: #ffeef0;
+  }
 
-/* Focus styles */
-:focus-visible {
-  outline: 2px solid #374151;
-  outline-offset: 2px;
+  .hljs-addition {
+    background: #f0fff4;
+  }
+
+  .hljs-emphasis {
+    font-style: italic;
+  }
+
+  .hljs-strong {
+    font-weight: bold;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Focus styles */
+  :focus-visible {
+    outline: 2px solid #374151;
+    outline-offset: 2px;
+  }
 }
 
 @layer base {

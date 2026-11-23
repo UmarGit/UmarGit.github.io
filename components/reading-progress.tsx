@@ -23,7 +23,7 @@ export default function ReadingProgress() {
   return (
     <div className="fixed top-0 left-0 w-full h-1 bg-gray-100 z-50">
       <motion.div
-        className="h-full bg-gradient-to-r from-gray-900 to-gray-700"
+        className="h-full bg-linear-to-r from-gray-900 to-gray-700"
         style={{ width: `${progress}%` }}
         initial={{ width: 0 }}
         animate={{ width: `${progress}%` }}

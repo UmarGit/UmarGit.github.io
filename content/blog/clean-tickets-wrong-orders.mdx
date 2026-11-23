@@ -1,0 +1,124 @@
+---
+title: "Clean Tickets, Wrong Orders: Running a 0.8B Parser in Your Browser Tab"
+description: "We put a fine-tuned 0.8B model inside the browser with llama.cpp compiled to WebAssembly. No order text leaves the device, every ticket is scored in the tab by the benchmark's own matcher, and on all 1,357 test orders the browser writes the same output as the server for 99.0% of them."
+date: "2026-11-13"
+tags: ["machine learning", "llm", "webassembly", "web", "research"]
+author:
+  name: "Umar Ahmed"
+  title: "Senior Software Engineer & ML Researcher"
+---
+
+Picture a pizza counter at rush hour. An order comes in, a small model turns it into a ticket, and the ticket prints: `pizza 2 medium extra cheese`. It's neat, it parses, and the kitchen starts cooking. The customer asked for something else.
+
+In our [companion paper](/blog/parsed-plausible-wrong) we called that a **silent error**: output that parses cleanly but is wrong. This paper asks a different question: **what changes when that model leaves the server and runs inside the visitor's browser tab?**
+
+📄 **Paper:** [arXiv:2611.18284](https://arxiv.org/abs/2611.18284) (demo paper, WWW Companion '27)
+🌐 **Live demo:** [wrong.cuyor.com](https://wrong.cuyor.com)
+💻 **Code:** [github.com/UmarGit/coffee-llm](https://github.com/UmarGit/coffee-llm) · **Model:** [pizza-words-gguf](https://huggingface.co/umarsheikh303/pizza-words-gguf)
+
+---
+
+## 📌 Why the Browser?
+
+Running in the tab means two nice things:
+
+* **Order text never leaves the device.**
+* **Each inference costs the site owner nothing.**
+
+It also means something uncomfortable: **there's no server log to audit.** The person in front of the screen is the last check. So we built the page as both a working parser *and* a place to go looking for its mistakes.
+
+---
+
+## 🧱 A Kitchen in a Browser Tab
+
+Everything below runs on the visitor's device:
+
+* **Model:** Qwen3.5-0.8B + LoRA, fine-tuned on PIZZA to write orders in plain words (the format the companion study recommends). Merged and quantized to **GGUF q8_0 (834 MB)**, published on Hugging Face with its SHA-256.
+* **Runtime:** [wllama](https://github.com/ngxson/wllama), a WebAssembly build of llama.cpp, running in a **Web Worker** so the page stays responsive.
+* **Threads:** multithreaded WASM needs cross-origin isolation. A static host can't set those headers, so a tiny **service worker** adds them.
+* **Cache:** the model lives in the **Origin Private File System (OPFS)**, so later visits load it from disk.
+* **Scoring:** PIZZA's official Python matcher, **ported to TypeScript**.
+
+That last one matters. We didn't trust the port: we compared it with the official matcher on **507,618 saved predictions → 0 disagreements**. The ported decoder was checked on **84,134 outputs → 0 disagreements**. So the page can mark every ticket *correct*, *detectable*, or *silent* using the benchmark's own rule.
+
+### Privacy by construction
+
+We recorded all network traffic in Chromium while typing 10 test orders (629 characters) key by key into the live box after the model loaded:
+
+> **0 network requests. 0 bytes sent.**
+
+The only third-party requests ever made are two web fonts and the one-time model download.
+
+---
+
+## 🎮 What a Visitor Does
+
+The page reads top to bottom like a short story, then hands over control:
+
+1. **Order as you type.** Pause for 650 ms (or press Enter) and the ticket streams in token by token. Any older parse still running is aborted, so a fast typist always sees the parse of their *latest* text, never a queue of stale ones.
+2. **Spot it.** Ten rounds of real tickets the model wrote for real test orders. Send back the wrong ones. Four are silent errors, and **every one of them parses**, which is the point: a grammar check would have caught none.
+3. **Break it.** Write an order meant to fool the model, read its ticket on your own device, and judge it right or wrong. The tally stays in your tab.
+4. **The gate.** An animation fires real inputs at the model. *"two large horses"*, *"hello"* and *"asdf"* bounce off with `?`; a real order prints.
+
+That `?` is the learned guardrail from the companion study, and it's what lets us leave the page open to the public internet. All **14 of 14** off-menu probes get `?` in the tab, after quantization.
+
+---
+
+## 📊 Does the Tab Keep Its Promises?
+
+A demo is only useful if the model in the tab *is* the model that was evaluated. So we ran all **1,357 PIZZA test orders** through the page's own engine in Chromium (driven by Playwright) and scored them with the in-tab matcher:
+
+| Setting | Exact | Silent | Refused | No parse |
+|---|---|---|---|---|
+| Server, full precision (5 seeds, cited) | 0.875 | 0.045 | 0.034 | 0.046 |
+| **Deployed, in the browser** | **0.882** | **0.036** | 0.020 | 0.062 |
+
+* **1,197** orders exactly right
+* **111** detectable errors (27 refused with `?`, 84 don't parse)
+* Only **49 silent errors (3.6%)**, which is exactly what the page is built to expose
+
+### Compare outputs, not scores
+
+Here's the subtle part. Browser and server agree on exact match, but that alone could hide changes that cancel out. So we compared **every output, order by order**: **99.0% identical**.
+
+The 13 orders that differed are long ones (median 25 words vs 13 overall). Their effect on accuracy cancelled perfectly: 2 correct tickets went wrong and 2 wrong ones became correct. Of the server's silent errors among them, 4 no longer parse in the browser and 1 new silent error appeared. **If anything, the tab is louder about its mistakes.**
+
+---
+
+## ⚡ Fast Enough to Type Against?
+
+We used the classic HCI limits: ~0.1 s feels instantaneous, ~1 s keeps your flow of thought. A hidden benchmark page runs 195 fixed orders through the real engine after warm-up:
+
+| Device, browser | Median | p90 | Under 1 s | First load |
+|---|---|---|---|---|
+| MacBook Air M3, 16 GB, Chrome | **383 ms** | 517 ms | 100% | 42 s |
+| MacBook M1, 8 GB, Chrome | 600 ms | 830 ms | 98% | 40 s |
+| Dell i7-1165G7, 16 GB, Edge | 2.99 s | 4.56 s | 0% | 45 s |
+
+On Apple Silicon, nine in ten orders finish inside the 1-second limit. The ticket streams at **50, 31 and 10 tokens/s** respectively, at about 12 tokens per ticket. The first visit is dominated by the 834 MB download (36–38 s of the 40–45 s), which is why the download is optional.
+
+---
+
+## 🛠️ Five Lessons from Shipping to the Tab
+
+Each of these cost us a wrong number or a broken page before we caught it.
+
+1. **Start every parse from a clean state.** The runtime reuses the previous prompt's cache by default. With our hybrid model (layers that keep recurrent state) that **crashed the worker** at a fixed point in a fixed sequence of orders. We turned prompt caching off, which also makes each parse independent, just like the server evaluation.
+2. **Key the cache by content, not by name.** A new model published under the same URL was served from the old cache while the page *reported* the new one. The SHA-256 is now part of the URL.
+3. **Measure only in a secure context.** OPFS and multithreading need HTTPS or localhost. Over plain HTTP on a LAN, the same page silently runs on one thread with no cache.
+4. **Compare outputs, not scores.** Identical exact match hid 13 changed outputs.
+5. **Make the download optional.** A first visit costs more than any parse, so the page replays saved outputs and only downloads the model when asked.
+
+---
+
+## Conclusion
+
+A clean parse is not a correct one, and when the model runs in the visitor's tab there may be no one else to notice. This demo puts the parser, its scorer and its failure modes in **one page that runs on your own device and sends no order text anywhere**.
+
+A quantized 0.8B model in a browser tab reproduces its server evaluation, writing the same output for 99.0% of the test orders, **but only an order-by-order check shows it.**
+
+Go try to break it: [wrong.cuyor.com](https://wrong.cuyor.com).
+
+---
+
+*Joint work with Maxim Dunaev, Mohammad Nour Al Awad, Sergey Ivanov and Ivan Khodnenko at ITMO University. The model is a research artifact trained on pizza orders under PIZZA's CC-BY-NC-4.0 license, not meant for real ordering, which is exactly why it's a safe place to go hunting for silent errors.*

@@ -116,9 +116,9 @@ export default function BlogPost({ post }: BlogPostProps) {
                   )}
                 </button>
               </div>
-              <pre className="!m-0 !bg-transparent overflow-x-auto">
+              <pre className="m-0! bg-transparent! overflow-x-auto">
                 <code
-                  className={`language-${match[1]} !bg-transparent text-sm`}
+                  className={`language-${match[1]} bg-transparent! text-sm`}
                   {...props}
                 >
                   {children}
