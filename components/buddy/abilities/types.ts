@@ -14,6 +14,12 @@ export interface Fx {
   look?: { x: number; y: number };
   /** Token chips shown in the speech bubble. */
   tokens?: string[];
+  /** Entanglement: a teal partner Qubi that mirrors every move. */
+  partner?: boolean;
+  /** A tiny scatter plot with a fitted line, drawn beside Qubi (data in 0…1). */
+  plot?: { points: [number, number][]; slope: number; intercept: number };
+  /** Zoom across with motion trails. */
+  speed?: boolean;
 }
 
 export interface AbilityContext {

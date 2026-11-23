@@ -6,6 +6,7 @@ import { BuddySprite } from "./BuddySprite";
 import { HEART, toPath } from "./pixels";
 import { FEET, GRID, HANDS, type Expression, type Pose } from "./creature";
 import { ABILITIES, pickAbility, type Ability, type Fx } from "./abilities";
+import { previousVisit } from "@/lib/visits";
 
 /**
  * Qubi lives on the page.
@@ -31,6 +32,24 @@ const FIRST_TRICK_MS = 7_000;
 const GIGGLES = ["hehe!", "hey!", "that tickles!", "hi hi ♪", "♡", "boop!"];
 const MUSINGS = ["ooh!", "interesting…", "hmm, hmm", "fascinating!", "for science ✦"];
 const INTRO = "hi, I'm Qubi! welcome to Umar's lab notebook ✎";
+const FIGURE_LINES = ["ooh, a plot!", "look at that curve ✦", "nice figure.", "hmm, interesting trend…"];
+const TABLE_LINES = ["*squints at the numbers*", "so many digits…", "checking the table ✎"];
+
+/** Greeting for the home page: a welcome back, with what's new since last time. */
+function introText(): string {
+  const prev = previousVisit();
+  if (prev === null) return INTRO;
+  let dates: string[] = [];
+  try {
+    dates = JSON.parse(document.querySelector("[data-buddy-entries]")?.getAttribute("data-buddy-entries") ?? "[]");
+  } catch {
+    /* no entries on this page */
+  }
+  const n = dates.filter((d) => Date.parse(d) > prev).length;
+  return n > 0
+    ? `welcome back! ${n} new ${n === 1 ? "entry" : "entries"} since your last visit ✦`
+    : "welcome back! ✎";
+}
 
 type Surface = { kind: "el"; el: Element } | { kind: "floor" } | { kind: "hang" };
 type Mode = "stand" | "hang" | "air" | "drag";
@@ -136,6 +155,11 @@ export default function Buddy() {
     ability: null as null | { a: Ability; abort: () => void },
     nextTrick: 0,
     lastTrick: "",
+    pointerAt: 0, // last time the visitor moved the pointer
+    attention: null as null | { el: Element; kind: "figure" | "table" },
+    noticed: new WeakSet<Element>(),
+    noticedAny: false, // the first figure/table on a page always gets a comment
+    nextAttention: 0,
   });
 
   // ---- helpers --------------------------------------------------------------
@@ -337,7 +361,7 @@ export default function Buddy() {
     } else if (s.greet) {
       s.greet = false;
       s.waveUntil = performance.now() + 2600;
-      say(INTRO, 3800);
+      say(introText(), 3800);
     } else if (to.kind === "el" && to.el.hasAttribute("data-buddy-perch") && Math.random() < 0.35) {
       say(MUSINGS[Math.floor(Math.random() * MUSINGS.length)], 1500);
     }
@@ -606,6 +630,31 @@ export default function Buddy() {
         runAbility(pickAbility(topicsHere()));
       }
 
+      // Notice figures and tables near the middle of the screen while reading.
+      if (now >= s.nextAttention) {
+        s.nextAttention = now + 250;
+        let found: typeof s.attention = null;
+        if (document.querySelector("[data-buddy-bar]")) {
+          for (const el of document.querySelectorAll(".prose .figure, .prose table")) {
+            const r = el.getBoundingClientRect();
+            const mid = (r.top + r.bottom) / 2;
+            if (mid > H * 0.25 && mid < H * 0.75) {
+              found = { el, kind: el.tagName === "TABLE" ? "table" : "figure" };
+              break;
+            }
+          }
+        }
+        if (found && found.el !== s.attention?.el && !s.noticed.has(found.el)) {
+          s.noticed.add(found.el);
+          if (!s.ability && !s.sleeping && (!s.noticedAny || Math.random() < 0.3)) {
+            s.noticedAny = true;
+            const lines = found.kind === "table" ? TABLE_LINES : FIGURE_LINES;
+            say(lines[Math.floor(Math.random() * lines.length)], 1600);
+          }
+        }
+        s.attention = found;
+      }
+
       const f = s.fx;
       let e: Expression = "open";
       if (s.flash && now < s.flash.until) e = s.flash.expr;
@@ -613,6 +662,7 @@ export default function Buddy() {
       else if (s.mode === "drag") e = "surprised";
       else if (s.mode === "air" && !s.hop && Math.hypot(s.vx, s.vy) > 1000) e = "surprised";
       else if (s.sleeping) e = "sleep";
+      else if (s.attention?.kind === "table" && now - s.pointerAt > 1500 && now >= s.blinkUntil) e = "focus";
       else if (now < s.blinkUntil) e = "blink";
 
       let p: Pose = "idle";
@@ -630,9 +680,16 @@ export default function Buddy() {
       }
 
       const fc = face();
+      // Eyes follow the cursor; when it rests, they turn to the figure or
+      // table being read.
+      let target: Pt = s.pointer;
+      if (s.attention && now - s.pointerAt > 1500) {
+        const r = s.attention.el.getBoundingClientRect();
+        target = { x: (r.left + r.right) / 2, y: (r.top + r.bottom) / 2 };
+      }
       const rl = f.look ?? {
-        x: Math.round(clamp((s.pointer.x - fc.x) / 160, -1, 1)),
-        y: Math.round(clamp((s.pointer.y - fc.y) / 160, -1, 1)),
+        x: Math.round(clamp((target.x - fc.x) / 160, -1, 1)),
+        y: Math.round(clamp((target.y - fc.y) / 160, -1, 1)),
       };
       if (rl.x !== s.look.x || rl.y !== s.look.y) {
         s.look = rl;
@@ -681,6 +738,7 @@ export default function Buddy() {
     };
     const onMove = (e: PointerEvent) => {
       s.pointer = { x: e.clientX, y: e.clientY };
+      s.pointerAt = performance.now();
       wake();
       const d = s.drag;
       if (!d || e.pointerId !== d.id) return;
@@ -771,6 +829,16 @@ export default function Buddy() {
     document.addEventListener("copy", onCopy);
     document.addEventListener("visibilitychange", onVis);
     window.addEventListener("buddy:theme", onTheme);
+    // Other parts of the site can make Qubi talk (e.g. "BibTeX copied! ✓").
+    const onSay = (e: Event) => {
+      const d = (e as CustomEvent<{ text: string; expression?: Expression }>).detail;
+      if (!d?.text) return;
+      if (d.expression) flash(d.expression, 1200);
+      say(d.text, 1600);
+      s.lastActivity = performance.now();
+      s.sleeping = false;
+    };
+    window.addEventListener("buddy:say", onSay);
 
     return () => {
       cancelAnimationFrame(raf);
@@ -787,6 +855,7 @@ export default function Buddy() {
       document.removeEventListener("copy", onCopy);
       document.removeEventListener("visibilitychange", onVis);
       window.removeEventListener("buddy:theme", onTheme);
+      window.removeEventListener("buddy:say", onSay);
       window.clearTimeout(leaveTimer);
       window.clearTimeout(petTimer);
     };
@@ -797,6 +866,7 @@ export default function Buddy() {
   // perch or a new progress bar on its own and moves Qubi there.
   useEffect(() => {
     st.current.hovered = null;
+    st.current.noticedAny = false;
     stopAbility();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
@@ -847,7 +917,7 @@ export default function Buddy() {
       <div ref={outerRef} className="buddy-outer" style={{ opacity: ready ? 1 : 0 }}>
         <div
           ref={innerRef}
-          className={`buddy-inner ${fx.glitch ? "is-glitch" : ""} ${fx.tint === "teal" ? "is-teal" : ""}`}
+          className={`buddy-inner ${fx.glitch ? "is-glitch" : ""} ${fx.tint === "teal" ? "is-teal" : ""} ${fx.speed ? "is-zoom" : ""}`}
           onPointerDown={onPointerDown}
           onDoubleClick={onDoubleClick}
           title="Qubi (click to say hi, double-click for a trick, drag to throw)"
@@ -862,7 +932,45 @@ export default function Buddy() {
               </div>
             </>
           )}
+          {fx.speed && (
+            <>
+              <div className="buddy-trail buddy-trail-2">{sprite()}</div>
+              <div className="buddy-trail buddy-trail-1">{sprite()}</div>
+            </>
+          )}
           <div className={fx.ghosts ? "buddy-body is-superposed" : "buddy-body"}>{sprite()}</div>
+          {fx.partner && (
+            // On the side away from the speech bubble.
+            <div
+              className="buddy-partner"
+              style={bubbleLeft ? { left: (GRID.w + 3) * cell } : { right: (GRID.w + 3) * cell }}
+            >
+              <span className="buddy-link" style={{ top: 8 * cell, width: 3 * cell, [bubbleLeft ? "right" : "left"]: "100%" }} />
+              {sprite()}
+            </div>
+          )}
+          {fx.plot && (
+            <svg
+              className="buddy-plot"
+              viewBox="0 0 64 48"
+              width={72}
+              height={54}
+              style={bubbleLeft ? { left: (GRID.w + 2) * cell } : { right: (GRID.w + 2) * cell }}
+            >
+              <path d="M6 4 V42 H60" fill="none" stroke="#2b2638" strokeWidth="1.5" />
+              {fx.plot.points.map(([x, y], i) => (
+                <rect key={i} x={6 + x * 52 - 1.5} y={42 - y * 36 - 1.5} width="3" height="3" fill="#c8605f" />
+              ))}
+              <line
+                x1={6}
+                y1={42 - clamp(fx.plot.intercept, -0.2, 1.2) * 36}
+                x2={58}
+                y2={42 - clamp(fx.plot.slope + fx.plot.intercept, -0.2, 1.2) * 36}
+                stroke="#6b5fb5"
+                strokeWidth="2"
+              />
+            </svg>
+          )}
           {pose !== "hang" && (
             <span
               className="buddy-bit"

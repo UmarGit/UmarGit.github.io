@@ -101,6 +101,18 @@ export function iconFor(tags: string[]): keyof typeof ICONS {
   return "notebook";
 }
 
+/** The icon as a standalone SVG string (for share cards). `ink` replaces currentColor. */
+export function pixelIconSvg(tags: string[], ink: string): string {
+  const icon = ICONS[iconFor(tags)];
+  const paths = [...grid(icon.rows)]
+    .map(
+      ([ch, px]) =>
+        `<path d="${px.map(([x, y]) => `M${x} ${y}h1v1h-1z`).join("")}" fill="${ch === "x" ? ink : icon.colors[ch]}"/>`
+    )
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" shape-rendering="crispEdges">${paths}</svg>`;
+}
+
 export default function PixelIcon({
   tags,
   size = 18,

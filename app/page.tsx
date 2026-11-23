@@ -24,7 +24,8 @@ export default async function Home() {
           </p>
         </section>
 
-        <section aria-labelledby="notebook">
+        {/* Entry dates, so Qubi can count what's new since your last visit. */}
+        <section aria-labelledby="notebook" data-buddy-entries={JSON.stringify(posts.map((p) => p.date))}>
           <div className="flex items-baseline justify-between border-b border-gray-900 pb-3">
             <h2 id="notebook" className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-900">
               Lab notebook

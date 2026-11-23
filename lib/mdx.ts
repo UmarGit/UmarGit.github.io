@@ -13,6 +13,16 @@ export interface PostLink {
   href: string;
 }
 
+/** An arXiv paper behind a post; renders a "Cite this" block. */
+export interface Citation {
+  key: string;
+  title: string;
+  authors: string[]; // "First Last"
+  year: number;
+  arxiv: string; // e.g. "2611.17169"
+  primaryClass?: string; // e.g. "cs.CL"
+}
+
 export interface BlogPost {
   slug: string;
   title: string;
@@ -24,6 +34,7 @@ export interface BlogPost {
   author?: Author;
   /** Paper-style buttons under the title (arXiv, code, demo…). */
   links: PostLink[];
+  citation?: Citation;
 }
 
 interface Frontmatter {
@@ -33,6 +44,7 @@ interface Frontmatter {
   tags: string[];
   author?: Author;
   links?: PostLink[];
+  citation?: Citation;
 }
 
 const BLOG_DIR = join(process.cwd(), "content/blog");
@@ -70,6 +82,7 @@ export async function getAllPosts(): Promise<BlogPost[]> {
           readTime: calculateReadTime(content),
           author: frontmatter.author,
           links: frontmatter.links ?? [],
+          citation: frontmatter.citation,
         };
       })
     );
@@ -113,6 +126,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       readTime: calculateReadTime(content),
       author: frontmatter.author,
       links: frontmatter.links ?? [],
+      citation: frontmatter.citation,
     };
   } catch (error) {
     console.error(`Error loading post ${slug}:`, error);

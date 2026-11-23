@@ -1,10 +1,13 @@
 import type { Ability } from "./types";
+import { entangle } from "./entangle";
+import { fit } from "./fit";
 import { glitch } from "./glitch";
+import { metal } from "./metal";
 import { qubit } from "./qubit";
 import { token } from "./token";
 
 /** Qubi's abilities. New research, new trick: add a file and list it here. */
-export const ABILITIES: Ability[] = [qubit, token, glitch];
+export const ABILITIES: Ability[] = [qubit, token, glitch, entangle, fit, metal];
 
 /** Pick an ability, favouring ones whose topics match the page. */
 export function pickAbility(topics: string[]): Ability {

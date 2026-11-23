@@ -629,3 +629,58 @@
     display: none;
   }
 }
+
+/* Qubi: entangle, fit, metal */
+.buddy-partner {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  filter: hue-rotate(-85deg) saturate(1.05);
+  animation: buddy-pop 300ms cubic-bezier(0.3, 1.7, 0.5, 1) both;
+}
+.buddy-link {
+  position: absolute;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, #2b2638 0 3px, transparent 3px 6px);
+}
+.buddy-plot {
+  position: absolute;
+  top: -6px;
+  padding: 4px;
+  background: #ffffff;
+  border: 2px solid #2b2638;
+  border-radius: 6px;
+  box-shadow: 2px 2px 0 rgb(43 38 56 / 0.16);
+  pointer-events: none;
+  animation: buddy-pop 260ms cubic-bezier(0.3, 1.7, 0.5, 1) both;
+}
+.buddy-inner.is-zoom .buddy-body,
+.buddy-trail {
+  animation: buddy-zoom 720ms cubic-bezier(0.5, 0, 0.2, 1) both;
+}
+.buddy-trail {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.buddy-trail-1 {
+  opacity: 0.35;
+  animation-delay: 45ms;
+}
+.buddy-trail-2 {
+  opacity: 0.15;
+  animation-delay: 90ms;
+}
+@keyframes buddy-zoom {
+  0% { transform: none; }
+  34% { transform: translateX(-90px) skewX(14deg); }
+  35% { transform: translateX(90px) skewX(-14deg); opacity: 0.6; }
+  75% { transform: translateX(0) skewX(-4deg); }
+  100% { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .buddy-inner.is-zoom .buddy-body,
+  .buddy-trail {
+    animation: none;
+  }
+}

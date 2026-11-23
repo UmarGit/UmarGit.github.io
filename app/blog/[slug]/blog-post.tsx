@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
@@ -15,7 +15,9 @@ import PixelIcon from "@/components/pixel-icon";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import Toc from "@/components/toc";
+import CiteBlock from "@/components/cite-block";
 import { extractHeadings, slugify } from "@/lib/headings";
+import { markRead } from "@/lib/visits";
 
 /** Plain text of a React subtree (for heading ids). */
 function textOf(node: React.ReactNode): string {
@@ -58,6 +60,7 @@ function CodeBlock({ lang, code, children }: { lang: string; code: string; child
 export default function BlogPost({ post }: { post: BlogPostType }) {
   const [lightbox, setLightbox] = useState<{ src: string; alt: string; originRect: DOMRect | null } | null>(null);
   const headings = useMemo(() => extractHeadings(post.content), [post.content]);
+  useEffect(() => markRead(post.slug), [post.slug]);
 
   const components: Components = {
     h2({ children }) {
@@ -148,6 +151,8 @@ export default function BlogPost({ post }: { post: BlogPostType }) {
               {post.content}
             </ReactMarkdown>
           </div>
+
+          {post.citation && <CiteBlock citation={post.citation} />}
 
           <footer className="mt-16 flex flex-col gap-6 border-t border-dashed border-gray-300 pt-8 sm:flex-row sm:items-center sm:justify-between">
             {post.author && (
