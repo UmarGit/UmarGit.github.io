@@ -1,64 +1,44 @@
-import { Suspense } from "react"
-import { getAllPosts } from "@/lib/mdx"
-import BlogList from "@/components/blog-list"
+import { getAllPosts } from "@/lib/mdx";
+import BlogList from "@/components/blog-list";
+import SiteHeader from "@/components/site-header";
+import SiteFooter from "@/components/site-footer";
 
 export default async function Home() {
-  const posts = await getAllPosts()
+  const posts = await getAllPosts();
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      {/* Hero section */}
-      <header className="max-w-2xl mx-auto px-6 pt-16 pb-12 w-full">
-        <h1 className="text-2xl md:text-3xl font-light text-gray-900 mb-4 leading-tight tracking-tight">
-          Hi, I'm Umar Ahmed
-        </h1>
-        <p className="text-lg text-gray-600 leading-relaxed font-light">
-          I write about software engineering, machine learning, data science, and quantum computing.
-        </p>
-      </header>
+    <div className="min-h-screen bg-white text-gray-900">
+      <SiteHeader />
 
-      {/* Blog posts */}
-      <main className="max-w-2xl mx-auto px-6 pb-16 w-full min-h-[calc(100vh-300px)]">
-        <h2 className="text-xl font-light text-gray-900 mb-8">Recent Posts</h2>
+      <main className="mx-auto max-w-3xl px-6">
+        <section className="pt-20 pb-16 sm:pt-28">
+          <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.2em] text-gray-500">
+            Software engineer · ML researcher
+          </p>
+          <h1 className="font-serif text-[2.6rem] leading-[1.05] tracking-tight text-gray-900 sm:text-6xl">
+            {/* Qubi stands right after this span. */}
+            <span data-buddy-home>Hi, I&apos;m Umar Ahmed</span>
+          </h1>
+          <p className="mt-6 max-w-xl font-serif text-xl leading-relaxed text-gray-600 sm:text-[1.4rem]">
+            I write about software engineering, machine learning, data science, and quantum computing.
+          </p>
+        </section>
 
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center py-12">
-              <div className="w-5 h-5 border border-gray-200 border-t-gray-800 rounded-full animate-spin"></div>
-            </div>
-          }
-        >
+        {/* Entry dates, so Qubi can count what's new since your last visit. */}
+        <section aria-labelledby="notebook" data-buddy-entries={JSON.stringify(posts.map((p) => p.date))}>
+          <div className="flex items-baseline justify-between border-b border-gray-900 pb-3">
+            <h2 id="notebook" className="font-mono text-[11px] uppercase tracking-[0.2em] text-gray-900">
+              Lab notebook
+            </h2>
+            <span className="font-mono text-[11px] text-gray-500">
+              {posts.length} {posts.length === 1 ? "entry" : "entries"}
+            </span>
+          </div>
           <BlogList posts={posts} />
-        </Suspense>
+        </section>
       </main>
 
-      {/* Footer */}
-      <footer className="max-w-2xl mx-auto p-6 border-t border-gray-100 w-full">
-        <div className="flex flex-row justify-between items-start space-y-4 md:space-y-0">
-          <div>
-            <div className="flex space-x-4 text-sm">
-              <a
-                href="mailto:umarsheikh303@gmail.com"
-                className="text-gray-500 hover:text-gray-700 transition-colors font-light"
-              >
-                Email
-              </a>
-              <a
-                href="https://linkedin.com/in/umarsheikh303"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-700 transition-colors font-light"
-              >
-                LinkedIn
-              </a>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <p className="text-gray-400 text-sm font-light">© {new Date().getFullYear()}</p>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
-  )
+  );
 }

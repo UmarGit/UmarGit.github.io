@@ -1,82 +1,51 @@
-"use client"
+import Link from "next/link";
+import type { BlogPost } from "@/lib/mdx";
+import PixelIcon from "@/components/pixel-icon";
+import ReadMark from "@/components/read-mark";
 
-import { motion } from "framer-motion"
-import Link from "next/link"
-import { ArrowUpRight, Dot } from "lucide-react"
-import { useState } from "react"
-import type { BlogPost } from "@/lib/mdx"
-
-interface BlogListProps {
-  posts: BlogPost[]
-}
-
-export default function BlogList({ posts }: BlogListProps) {
-  const [hoveredPost, setHoveredPost] = useState<string | null>(null)
-
+/** The notebook index: one dashed "shelf" per entry, like a paper listing. */
+export default function BlogList({ posts }: { posts: BlogPost[] }) {
   if (posts.length === 0) {
-    return <p className="text-gray-600 text-center py-12 font-light">No posts found.</p>
+    return <p className="py-12 text-center font-serif text-gray-600">No entries yet.</p>;
   }
 
   return (
-    <div className="space-y-2">
-      {posts.map((post, index) => (
-        <motion.article
+    <ol>
+      {posts.map((post) => (
+        <li
           key={post.slug}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: index * 0.1 }}
-          className="group"
-          onMouseEnter={() => setHoveredPost(post.slug)}
-          onMouseLeave={() => setHoveredPost(null)}
+          className="pixel-shelf group first:before:hidden"
+          data-buddy-perch
+          data-buddy-topics={post.tags.map((t) => t.toLowerCase()).join("|")}
         >
-          <Link href={`/blog/${post.slug}`}>
-            <div className="py-6 px-4 -mx-4 hover:bg-gray-50/80 rounded-lg transition-all duration-300 cursor-pointer">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center mb-2 space-x-2 text-sm text-gray-500">
-                    <span className="font-light">
-                      {new Date(post.date).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                    <Dot className="w-3 h-3" />
-                    <span className="font-light">{post.readTime}</span>
-                  </div>
-
-                  <h2 className="text-lg font-medium text-gray-900 mb-2 group-hover:text-gray-700 transition-colors leading-snug">
-                    {post.title}
-                  </h2>
-
-                  <p className="text-gray-600 leading-relaxed font-light text-sm mb-3">{post.description}</p>
-
-                  <div className="flex flex-wrap gap-1">
-                    {post.tags.slice(0, 3).map((tag) => (
-                      <span
-                        key={tag}
-                        className="text-xs text-gray-500 font-light border border-gray-200 bg-gray-50 px-2 py-1 rounded"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                    {post.tags.length > 3 && <span className="text-xs text-gray-400">+{post.tags.length - 3}</span>}
-                  </div>
-                </div>
-                <motion.div
-                  animate={{
-                    x: hoveredPost === post.slug ? 2 : 0,
-                    y: hoveredPost === post.slug ? -2 : 0,
-                  }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <ArrowUpRight className="w-4 h-4 text-gray-400 group-hover:text-gray-600 transition-colors ml-6 flex-shrink-0" />
-                </motion.div>
+          <Link
+            href={`/blog/${post.slug}`}
+            className="-mx-3 grid grid-cols-1 gap-x-8 gap-y-2 rounded-md px-3 py-7 transition-colors hover:bg-gray-50 sm:grid-cols-[6.5rem_1fr_auto]"
+          >
+            <div className="flex items-baseline gap-3 pt-1 sm:block">
+              <time dateTime={post.date} className="font-mono text-xs text-gray-500 sm:block">
+                {post.date}
+              </time>
+              <ReadMark slug={post.slug} date={post.date} />
+            </div>
+            <div className="min-w-0">
+              <h3 className="flex items-start gap-3 font-serif text-[1.4rem] leading-snug text-gray-900 transition-colors group-hover:text-accent">
+                <PixelIcon tags={post.tags} size={18} className="mt-1.5 text-gray-700" />
+                <span>{post.title}</span>
+              </h3>
+              <p className="mt-2 line-clamp-2 text-[0.95rem] leading-relaxed text-gray-600">{post.description}</p>
+              <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[11px] text-gray-500">
+                {post.tags.slice(0, 4).map((tag) => (
+                  <span key={tag}>#{tag.toLowerCase().replace(/\s+/g, "-")}</span>
+                ))}
               </div>
             </div>
+            <span className="hidden whitespace-nowrap pt-1 font-mono text-xs text-gray-500 sm:block">
+              {post.readTime}
+            </span>
           </Link>
-        </motion.article>
+        </li>
       ))}
-    </div>
-  )
+    </ol>
+  );
 }
